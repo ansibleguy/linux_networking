@@ -1,0 +1,16 @@
+[Unit]
+Description=Service to add custom interfaces and system routes on startup
+Documentation=https://github.com/ansibleguy/base-network
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash {{ network_script_dir }}/{{ startup_script }}
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier={{ startup_syslog_id }}
+
+
+[Install]
+WantedBy=multi-user.target

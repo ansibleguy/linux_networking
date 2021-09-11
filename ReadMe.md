@@ -1,6 +1,6 @@
-# Ansible UFW role
+# Ansible Network role
 
-Role to configure the ufw service.
+Ansible role to configure network interfaces and routing on linux servers 
 
 **Note:** this role currently only supports debian-based systems
 

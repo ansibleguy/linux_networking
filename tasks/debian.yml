@@ -1,0 +1,24 @@
+---
+
+- name: Network | Debian | Installing network tools
+  ansible.builtin.apt:
+    name: "{{ install_nw_tools_list }}"
+    state: present
+  when: install_nw_tools
+
+- name: Network | Debian | Configuring startup-service
+  ansible.builtin.import_tasks: debian/startup.yml
+
+- name: Network | Debian | Configuring network interfaces
+  ansible.builtin.import_tasks: debian/interfaces.yml
+  when:
+    - network_interfaces is defined
+    - network_interfaces | length > 0
+
+- name: Network | Debian | Applying network config via verifier
+  ansible.builtin.import_tasks: debian/verification.yml
+  when: verify_network_changes
+
+- name: Network | Debian | Applying network config w/o verification
+  ansible.builtin.import_tasks: debian/apply.yml
+  when: not verify_network_changes

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# {{ ansible_managed }} - role {{ role_name }}
+
+# interfaces
+{% for cmd in startup_interfaces %}
+{%   if cmd.startswith('ip link') %}
+{{ cmd }}
+{%   else %}
+# command: '{{ cmd }}' was filtered!
+{%   endif %}
+{% endfor %}
+
+# routes
+{% for cmd in startup_routes %}
+{%   if cmd.startswith('ip route') %}
+{{ route }}
+{%   else %}
+# command: '{{ cmd }}' was filtered!
+{%   endif %}
+{% endfor %}

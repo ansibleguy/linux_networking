@@ -1,0 +1,66 @@
+---
+
+- name: Network | Debian | NW-Verifier | Installing network verification tools
+  ansible.builtin.apt:
+    name: "{{ network_verification_packages }}"
+    state: present
+
+- name: Network | Debian | NW-Verifier | Remove old config-backups
+  ansible.builtin.file:
+    path: "{{ network_script_dir }}/backup"
+    state: absent
+
+- name: Network | Debian | NW-Verifier | Creating directories
+  ansible.builtin.file:
+    path: "{{ network_script_dir }}/backup"
+    owner: 'root'
+    group: 'root'
+    state: directory
+    mode: 0755
+
+- name: Network | Debian | NW-Verifier | Copying verification script
+  ansible.builtin.template:
+    src: 'templates/usr/local/sbin/ansibleguy.base-network/activate_network.py.j2'
+    dest: "{{ network_script_dir }}/{{ network_verification_script }}"
+    owner: 'root'
+    group: 'root'
+    mode: 0755
+
+- name: Network | Debian | NW-Verifier | Copying verification service
+  ansible.builtin.template:
+    src: 'templates/etc/systemd/system/ansibleguy.base-network.activate_network.service.j2'
+    dest: "/etc/systemd/system/{{ network_verification_service }}"
+    owner: 'root'
+    group: 'root'
+    mode: 0644
+
+- name: Network | Debian | NW-Verifier | Systemd daemon-reload
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Network | Debian | NW-Verifier | Starting verification service
+  ansible.builtin.systemd:
+    name: "{{ network_verification_service }}"
+    state: started
+  ignore_errors: true
+
+- name: Network | Debian | NW-Verifier | Waiting to re-establish connection
+  ansible.builtin.wait_for_connection:
+    timeout: "{{ network_verification.apply_timeout }}"
+  register: connection_restore
+  ignore_errors: true
+
+- name: Network | Debian | NW-Verifier | Unable to connect
+  ansible.builtin.fail:
+    msg: 'It seems like we lost the connection to the target-host. This should not happen. Please check the logs on the target-system!'
+  when:
+    - connection_restore.failed is defined
+    - connection_restore.failed
+
+- name: Network | Debian | NW-Verifier | Getting network activation logs
+  ansible.builtin.command: "journalctl -u {{ network_verification_service }} --no-pager -n {{ network_verification_log_output_lines }}"
+  register: network_activation
+
+- name: Network | Debian | NW-Verifier | Here are the last logs of the network activation
+  debug:
+    msg: "{{ network_activation.stdout_lines[1:] }}"

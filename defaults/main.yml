@@ -1,0 +1,57 @@
+---
+
+# main switches
+install_nw_tools: true
+verify_network_changes: true
+  # a python3 script (running as systemd service) will test your hosts network connectivity before and after network configuration-changes
+  # if the verification fails the network configuration will be restored to the old state
+  # this should help you to prevent locking yourself out of remote systems
+  # my inspiration for this feature comes from the handling by barracuda network-firewalls
+
+# basic important config
+backup_config: false  # if the ansible backup-flag should be set for important config-files; has noting to do with the verification-restore
+network_script_dir: '/usr/local/sbin/ansibleguy.base-network'
+network_apply_timeout: 30  # how long ansible will wait for a re-established ssh connection
+
+# startup service config
+#   for custom interfaces and non-interface-bound routes (like gateway routes and so on..)
+startup_script: 'startup.sh'
+startup_service: 'ansibleguy.base-network.startup.service'
+startup_syslog_id: 'ansibleguy.base-network.startup'
+
+startup_interfaces: []  # a list of custom 'ip link add...' commands
+startup_routes: []  # a list of custom 'ip route add...' commands
+
+# tools
+install_nw_tools_list:
+  - 'iftop'
+  - 'net-tools'
+  - 'dnsutils'
+
+# network change-verification settings
+network_verification:
+  retries: 3  # how often the tests should be retried before restoring the previous config state
+  retry_wait: 0.3  # seconds to wait between retries
+  test_timeout: 1  # timeout per test in seconds
+  apply_timeout: "{{ network_apply_timeout }}"
+  logging: 1  # 1/0 = yes/no
+  syslog_id: 'ansibleguy.base-network.activate_network'
+  tests:
+    # could be a list of some internal addresses that MUST BE reachable
+    # you might need to modify the default rule if icmp-ping is blocked in the network
+    ping:
+      google_dns: '8.8.8.8'
+#    netcat:  # will test if the remote port is reachable
+#      google_web:
+#        host: 'google.com'
+#        port: 443
+
+network_verification_packages:
+  - 'fping'
+  - 'netcat'
+
+# you shouldn't have a need to change these verification-settings
+network_verification_script: 'activate_network.py'
+network_verification_backup_path_separator: '___'
+network_verification_log_output_lines: 5
+network_verification_service: 'ansibleguy.base-network.activate_network.service'

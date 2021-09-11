@@ -1,0 +1,15 @@
+[Unit]
+Description=Service to verify new network configuration and apply it
+Documentation=https://github.com/ansibleguy/base-network
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 {{ network_script_dir }}/{{ network_verification_script }}
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier={{ network_verification.syslog_id }}
+
+Environment="PYTHONUNBUFFERED=1"
+
+[Install]
+WantedBy=multi-user.target
