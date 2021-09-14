@@ -5,19 +5,6 @@
     name: "{{ network_verification_packages }}"
     state: present
 
-- name: Network | Debian | NW-Verifier | Remove old config-backups
-  ansible.builtin.file:
-    path: "{{ network_script_dir }}/backup"
-    state: absent
-
-- name: Network | Debian | NW-Verifier | Creating directories
-  ansible.builtin.file:
-    path: "{{ network_script_dir }}/backup"
-    owner: 'root'
-    group: 'root'
-    state: directory
-    mode: 0755
-
 - name: Network | Debian | NW-Verifier | Copying verification script
   ansible.builtin.template:
     src: 'templates/usr/local/sbin/ansibleguy.base-network/activate_network.py.j2'
@@ -34,15 +21,13 @@
     group: 'root'
     mode: 0644
 
-- name: Network | Debian | NW-Verifier | Systemd daemon-reload
-  ansible.builtin.systemd:
-    daemon_reload: yes
-
 - name: Network | Debian | NW-Verifier | Starting verification service
   ansible.builtin.systemd:
+    daemon_reload: yes
     name: "{{ network_verification_service }}"
     state: started
   ignore_errors: true
+  timeout: 5
 
 - name: Network | Debian | NW-Verifier | Waiting to re-establish connection
   ansible.builtin.wait_for_connection:
@@ -52,7 +37,9 @@
 
 - name: Network | Debian | NW-Verifier | Unable to connect
   ansible.builtin.fail:
-    msg: 'It seems like we lost the connection to the target-host. This should not happen. Please check the logs on the target-system!'
+    msg: 'It seems like we lost the connection to the target-host.
+    This should not happen. (but might so if the ip was changed on purpose..)
+    Please check the logs on the target-system!'
   when:
     - connection_restore.failed is defined
     - connection_restore.failed
@@ -63,4 +50,4 @@
 
 - name: Network | Debian | NW-Verifier | Here are the last logs of the network activation
   debug:
-    msg: "{{ network_activation.stdout_lines[1:] }}"
+    msg: "{{ network_activation.stdout_lines[1:-2] }}"

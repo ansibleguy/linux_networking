@@ -12,8 +12,10 @@ from sys import exit as sys_exit
 from time import sleep
 
 VERIFICATION = json_loads('{{ network_verification | to_json }}')
+TESTS = json_loads('{{ network_tests | to_json }}')
 BACKUP_PATH = f'{{ network_script_dir }}/backup'
 BACKUP_PATH_SEPARATOR = '{{ network_verification_backup_path_separator }}'
+STARTUP_SERVICE = '{{ startup_service }}'
 
 {% raw %}
 # initializing syslog logger
@@ -44,14 +46,14 @@ class Verification:
     # class to verify the network-connectivity of this host
 
     def __init__(self):
-        self.try_count = 0
         self.ping_count = 2
         self.timeout = VERIFICATION['test_timeout']
         self.ping_timeout = (self.timeout / self.ping_count) * 1000
 
     def do(self) -> bool:
-        while self.try_count < VERIFICATION['retries']:
-            self.try_count += 1
+        try_count = 0
+        while try_count < VERIFICATION['retries']:
+            try_count += 1
 
             results = self._get_results()
 
@@ -65,7 +67,7 @@ class Verification:
     def _get_results(self) -> list:
         results = []
 
-        for test_type, test_config in VERIFICATION['tests'].items():
+        for test_type, test_config in TESTS.items():
             if not all(results):
                 return results  # if a check failed - we have no need to run further checks
 
@@ -117,14 +119,13 @@ class Verification:
 
 
 def restore_config():
+    os_system(f'cp -r /etc/network/interfaces* /tmp/')  # for troubleshooting purposes
     for config_backup in os_listdir(BACKUP_PATH):
         src = f"{BACKUP_PATH}/{config_backup}"
-        dst_path = '/'.join(file.split(BACKUP_PATH_SEPARATOR)[:-1])
-        dst_file = file.split(BACKUP_PATH_SEPARATOR)[-1]
-        dst = f"{dst_path}/{dst_file}"
+        dst = '/'.join(config_backup.split(BACKUP_PATH_SEPARATOR))
 
         copyfile(src=src, dst=dst)
-        log("Restored config-file '{dst}'", level=2)
+        log(f"Restored config-file '{dst}'", level=2)
 
 
 def apply_config():
@@ -134,23 +135,25 @@ def apply_config():
 
 # back-up old network config is done by the ansible role (when changed in check mode - copy to backup-dir before modifying)
 
+Verify = Verification()
+
 # test connectivity via verification tests
 #   fail and notify user that the tests do not work
 
-if not Verification().do():
+if not Verify.do():
     error('The verification process did not work BEFORE APPLYING CHANGES!\nYou NEED TO FIX your tests so the verification works properly!')
 
 # activate new network config
 apply_config()
 
 # test connectivity with new network-config via verification tests
-if not Verification().do():
+if not Verify.do():
     # restore old config and re-activate it if the verification failed
     log('Network tests did not succeed after applying the new network-config! We will now revert the changes and re-apply the old config!', level=1)
     restore_config()
     apply_config()
 
-    if Verification().do():
+    if Verify.do():
         log('The network-config restore was applied successfully!', level=2)
 
     else:

@@ -1,0 +1,61 @@
+---
+
+- name: "Network | Debian  | Interface | {{ iface.key }} | Setting vars"
+  ansible.builtin.set_fact:
+    iface_file: "/etc/network/interfaces.d/{{ iface.key }}"
+    copy_device_iface:
+    copy_device_iface_file:
+
+- name: "Network | Debian  | Interface | {{ iface.key }} | Checking if main interface file exists"
+  ansible.builtin.stat:
+    path: "{{ iface_file }}"
+  register: copy_device_iface_file
+  changed_when: false
+  check_mode: false
+  when: verify_network_changes
+
+- name: "Network | Debian  | Interface | {{ iface.key }} | Checking if main interface file changed"
+  ansible.builtin.template:
+    src: 'templates/etc/network/interfaces.d/int.j2'
+    dest: "{{ iface_file }}"
+    owner: 'root'
+    group: 'root'
+    mode: 0644
+  check_mode: true
+  register: copy_device_iface
+  when: verify_network_changes
+
+- name: "Network | Debian  | Interface | {{ iface.key }} | Backing-up current config if changed/exists"
+  ansible.builtin.copy:
+    src: "{{ iface_file }}"
+    remote_src: true
+    dest: "{{ network_script_dir }}/backup/{{ iface_file | replace('/', network_verification_backup_path_separator) }}"
+    owner: 'root'
+    group: 'root'
+    mode: 0644
+  when:
+    - verify_network_changes
+    - copy_device_iface_file.stat.exists
+    - copy_device_iface.changed
+
+- name: "Network | Debian  | Interface | {{ iface.key }} | Backing-up empty file"
+  ansible.builtin.file:
+    path: "{{ network_script_dir }}/backup/{{ iface_file | replace('/', network_verification_backup_path_separator) }}"
+    state: touch
+    owner: 'root'
+    group: 'root'
+    mode: 0644
+  when:
+    - verify_network_changes
+    - not copy_device_iface_file.stat.exists
+    - copy_device_iface.changed
+
+- name: "Network | Debian  | Interface | {{ iface.key }} | Copying main interface file"
+  ansible.builtin.template:
+    src: 'templates/etc/network/interfaces.d/int.j2'
+    dest: "{{ iface_file }}"
+    owner: 'root'
+    group: 'root'
+    mode: 0644
+  when: not verify_network_changes or copy_device_iface.changed
+

@@ -2,20 +2,82 @@
 
 # {{ ansible_managed }} - role {{ role_name }}
 
+log_hl () {
+  echo ''
+  echo '##########'
+  echo $1
+}
+
 # interfaces
-{% for cmd in startup_interfaces %}
+#   generated ip link config
+##########
+log_hl 'Configuring generated interfaces'
+{% for if_name, config in startup_interfaces.items() %}
+ip link add {{ if_name }} type {{ config.type }} {% for setting, value in config.args.items() %} {{ setting }} {{ value }} {% endfor %}
+
+{% if 'up' not in config or config.up %}
+ip link set {{ if_name }} up
+{% endif %}
+
+{% if 'addr' in config %}
+{%   for addr in config.addr %}
+ip addr add {{ addr }} dev {{ if_name }}
+
+{%   endfor %}
+{% endif %}
+
+{% endfor %}
+##########
+
+#   ip link commands directly provided by manager
+##########
+log_hl 'Configuring scripted interfaces'
+{% for cmd in startup_interfaces_cmd %}
 {%   if cmd.startswith('ip link') %}
 {{ cmd }}
+
 {%   else %}
 # command: '{{ cmd }}' was filtered!
+
 {%   endif %}
 {% endfor %}
+##########
 
 # routes
-{% for cmd in startup_routes %}
+#   generated ip route config
+##########
+log_hl 'Configuring generated routes'
+{% for gateway, config in startup_routes.items() %}
+{%   for route in config %}
+ip route add {{ route.net }} {% if gateway|ipaddr %}via{% else %}dev{% endif %} {{ gateway }} {% if 'metric' in route %}metric {{ route.metric }}{% endif %}
+
+{%   endfor %}
+{% endfor %}
+##########
+
+#   ip route commands directly provided by manager
+##########
+log_hl 'Configuring scripted routes'
+{% for cmd in startup_routes_cmd %}
 {%   if cmd.startswith('ip route') %}
-{{ route }}
+{{ cmd }}
+
 {%   else %}
 # command: '{{ cmd }}' was filtered!
+
 {%   endif %}
 {% endfor %}
+##########
+
+echo '##########'
+echo '##########'
+echo '##########'
+echo 'Current network config:'
+log_hl 'Interfaces:'
+echo '##########'
+ip a
+log_hl 'Routes:'
+echo '##########'
+ip route show
+
+exit 0  # so the networking.service is not mad on us if some command did not run as expected..

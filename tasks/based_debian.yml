@@ -1,0 +1,150 @@
+---
+
+- name: Network | Debian-Based | Remove old verifier config-backups
+  ansible.builtin.file:
+    path: "{{ network_script_dir }}/backup"
+    state: absent
+  when: verify_network_changes
+  tags: always
+  changed_when: false
+
+- name: Network | Debian-Based | Re-creating verifier backup-directory
+  ansible.builtin.file:
+    path: "{{ network_script_dir }}/backup"
+    owner: 'root'
+    group: 'root'
+    state: directory
+    mode: 0755
+  when: verify_network_changes
+  tags: always
+  changed_when: false
+
+- name: Network | Debian-Based | Installing network tools
+  ansible.builtin.apt:
+    name: "{{ install_nw_tools_list }}"
+    state: present
+  when: install_nw_tools
+
+- name: Network | Debian-Based | Installing vlan package
+  ansible.builtin.apt:
+    name: ['vlan']
+    state: present
+  when: configure_vlan_support
+  tags: interfaces
+  register: prerequisite_vlan_pkg
+
+- name: Network | Debian-Based | Add the 802.1q module for vlan support (1/2)
+  community.general.modprobe:
+    name: '8021q'
+    state: present
+  when: configure_vlan_support
+  tags: interfaces
+  register: prerequisite_vlan_mod
+
+- name: Network | Debian-Based | Add the 802.1q module for vlan support (2/2)
+  command: "echo 8021q >> /etc/modules"
+  when: prerequisite_vlan_mod.changed
+  tags: interfaces
+
+- name: Network | Debian-Based | Installing bonding package
+  ansible.builtin.apt:
+    name: ['ifenslave']
+    state: present
+  when: configure_bonding_support
+  tags: interfaces
+  register: prerequisite_bonding_pkg
+
+- name: Network | Debian-Based | Add the bonding module for nic-teaming support (1/2)
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  when: configure_bonding_support
+  tags: interfaces
+  register: prerequisite_bonding_mod
+  with_items:
+    - 'bonding'
+    - 'mii'
+
+- name: Network | Debian-Based | Add the bonding module for nic-teaming support (2/2)
+  command: "echo {{ item }} >> /etc/modules"
+  when: prerequisite_bonding_mod.changed
+  tags: interfaces
+  with_items:
+    - 'bonding'
+    - 'mii'
+
+- name: Network | Debian-Based | Installing bridge package
+  ansible.builtin.apt:
+    name: ['bridge-utils']
+    state: present
+  when: configure_bridge_support
+  tags: interfaces
+  register: prerequisite_bridge_pkg
+
+- name: Network | Debian-Based | Configuring sysctl to allow traffic forwarding
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_set: yes
+    state: present
+    reload: yes
+  with_dict: "{{ sysctl_traffic_forwarding }}"
+  when: configure_traffic_forwarding
+  tags: routing
+
+- name: Network | Debian-Based | Configuring sysctl to disable ipv6
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_set: yes
+    state: present
+    reload: yes
+  with_dict: "{{ sysctl_disable_ipv6 }}"
+  when: configure_ipv6_disable
+  tags:
+    - routing
+    - interfaces
+
+- name: Network | Debian-Based | Resloading network after prerequisit-changes
+  ansible.builtin.systemd:
+    name: 'networking.service'
+    state: restarted
+  ignore_errors: true
+  timeout: 5
+  when: >
+    (prerequisite_vlan_mod is defined and prerequisite_vlan_mod.changed) or
+    (prerequisite_vlan_pkg is defined and prerequisite_vlan_pkg.changed) or
+    (prerequisite_bonding_mod is defined and prerequisite_bonding_mod.changed) or
+    (prerequisite_bonding_pkg is defined and prerequisite_bonding_pkg.changed) or
+    (prerequisite_bridge_pkg is defined and prerequisite_bridge_pkg.changed)
+
+- name: Network | Debian-Based | Waiting to re-establish connection
+  ansible.builtin.wait_for_connection:
+    timeout: "{{ network_apply_timeout }}"
+  register: connection_restore
+  ignore_errors: true
+
+- name: Network | Debian-Based | Checking if ufw allows forwarded traffic
+  ansible.builtin.shell: 'cat /etc/default/ufw | grep FORWARD_POLICY | grep -c DROP'
+  register: ufw_policy_forward
+  when: configure_traffic_forwarding
+  changed_when: false
+  check_mode: false
+  tags: routing
+
+- name: Network | Debian-Based | Nofifying user about ufw forward-policy
+  ansible.builtin.pause:
+    prompt: "It seems that your ufw config does not allow forwarded traffic ('policy_forward') =>
+      you might need to change this or create specific rules to allow forwarded traffic!
+      Else it won't work!"
+    seconds: 5
+  tags: routing
+  when:
+    - configure_traffic_forwarding
+    - ufw_policy_forward.stdout is defined
+    - ufw_policy_forward.stdout|int == 1
+    - ufw_config is undefined or (ufw_config.policy_forward is defined and ufw_config.policy_forward == 'DROP')
+
+- name: Network | Debian-Based | Processing debian config
+  ansible.builtin.import_tasks: distro_debian.yml
+  when: ansible_distribution|lower == 'debian'

@@ -1,34 +1,67 @@
 ---
 
-- name: Network | Debian | Startup | Creating script directory
+- name: Network | Debian | Startup | Creating directories
   ansible.builtin.file:
-    path: "{{ network_script_dir }}"
+    path: "{{ item }}"
     owner: 'root'
     group: 'root'
     state: directory
     mode: 0755
+  with_items:
+    - "{{ network_script_dir }}"
+    - '/etc/systemd/system/networking.service.d'
 
-- name: Network | Debian | Startup | Copying scripts
+- name: Network | Debian | Startup | Checking if script exists
+  ansible.builtin.stat:
+    path: "{{ network_script_dir }}/{{ startup_script }}"
+  register: copy_startup_script_file
+  changed_when: false
+  check_mode: false
+
+- name: Network | Debian | Startup | Checking if script changed
   ansible.builtin.template:
     src: "templates/usr/local/sbin/ansibleguy.base-network/startup.sh.j2"
     dest: "{{ network_script_dir }}/{{ startup_script }}"
     owner: 'root'
     group: 'root'
     mode: 0755
+  check_mode: true
+  register: copy_startup_script
 
-- name: Network | Debian | Startup | Copying service
+- name: Network | Debian | Startup | Backing-up current config if changed/exists
+  ansible.builtin.copy:
+    src: "{{ network_script_dir }}/{{ startup_script }}"
+    remote_src: true
+    dest: "{{ network_script_dir }}/backup/{{ network_script_dir | replace('/', network_verification_backup_path_separator) }}{{ network_verification_backup_path_separator }}{{ startup_script }}"
+    owner: 'root'
+    group: 'root'
+    mode: 0755
+  when:
+    - verify_network_changes
+    - copy_startup_script_file.stat.exists
+    - copy_startup_script.changed
+
+- name: Network | Debian | Startup | Copying script
   ansible.builtin.template:
-    src: 'templates/etc/systemd/system/ansibleguy.base-network.startup.service.j2'
-    dest: "/etc/systemd/system/{{ startup_service }}"
+    src: "templates/usr/local/sbin/ansibleguy.base-network/startup.sh.j2"
+    dest: "{{ network_script_dir }}/{{ startup_script }}"
+    owner: 'root'
+    group: 'root'
+    mode: 0755
+    backup: "{{ backup_config }}"
+  when: not verify_network_changes or copy_startup_script.changed
+
+- name: Network | Debian | Startup | Copying service files
+  ansible.builtin.template:
+    src: "templates/etc/systemd/system/{{ item.src }}"
+    dest: "/etc/systemd/system/{{ item.dst }}"
     owner: 'root'
     group: 'root'
     mode: 0644
+  with_items:
+    - {src: 'ansibleguy.base-network.startup.service.j2', dst: "{{ startup_service }}"}
+    - {src: 'networking.service.d/override.conf.j2', dst: 'networking.service.d/override.conf'}
 
 - name: Network | Debian | Startup | Systemd daemon-reload
   ansible.builtin.systemd:
     daemon_reload: yes
-
-- name: Network | Debian | Startup | Enabling service
-  ansible.builtin.systemd:
-    name: "{{ startup_service }}"
-    enabled: true

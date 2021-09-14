@@ -5,6 +5,7 @@
     name: 'networking.service'
     state: restarted
   ignore_errors: true
+  timeout: 5
 
 - name: Network | Debian | Apply | Waiting to re-establish connection
   ansible.builtin.wait_for_connection:
@@ -14,7 +15,9 @@
 
 - name: Network | Debian | Apply | Unable to connect
   ansible.builtin.fail:
-    msg: 'It seems like we lost the connection to the target-host. This will most probably be a configuration-issue! Consider using the network-verifier in the future!'
+    msg: 'It seems like we lost the connection to the target-host. (but might so if the ip was changed on purpose..)
+    This will most probably be a configuration-issue!
+    Consider using the network-verifier in the future!'
   when:
     - connection_restore.failed is defined
     - connection_restore.failed

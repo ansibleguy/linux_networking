@@ -1,2 +1,65 @@
 ---
 
+# todo: check if two interfaces have a gateway defined => one of those will not come up since it's a configuration error..
+
+- name: Network | Debian | Interfaces | Creating interface directory
+  ansible.builtin.file:
+    path: '/etc/network/interfaces.d'
+    owner: 'root'
+    group: 'root'
+    state: directory
+    mode: 0755
+
+- name: Getting current configured interfaces
+  ansible.builtin.command: 'ls /etc/network/interfaces.d/'
+  register: installed_interfaces
+  when: purge_orphaned_interfaces
+  check_mode: false
+
+- name: Network | Debian | Interfaces | Purging orphaned interfaces
+  ansible.builtin.include_tasks: debian/purge.yml
+  loop_control:
+    loop_var: iface_name
+  with_items: "{{ installed_interfaces.stdout_lines }}"
+  when:
+    - purge_orphaned_interfaces
+    - iface_name not in network_interfaces
+
+- name: Network | Debian | Interfaces | Configuring network interfaces
+  ansible.builtin.include_tasks: debian/interface-device.yml
+  with_dict: "{{ network_interfaces }}"
+  loop_control:
+    loop_var: iface
+  when: iface.key is defined
+
+- name: Network | Debian  | Interfaces | Checking if main interface file changed
+  ansible.builtin.template:
+    src: 'templates/etc/network/interfaces.j2'
+    dest: '/etc/network/interfaces'
+    owner: 'root'
+    group: 'root'
+    mode: 0644
+  check_mode: true
+  register: copy_main_iface
+  when: verify_network_changes
+
+- name: Network | Debian | Interfaces | Backing-up current config if changed/exists
+  ansible.builtin.copy:
+    src: '/etc/network/interfaces'
+    remote_src: true
+    dest: "{{ network_script_dir }}/backup/{{ '/etc/network/interfaces' | replace('/', network_verification_backup_path_separator) }}"
+    owner: 'root'
+    group: 'root'
+    mode: 0644
+  when:
+    - verify_network_changes
+    - copy_main_iface.changed
+
+- name: Network | Debian  | Interfaces | Copying main interface file
+  ansible.builtin.template:
+    src: 'templates/etc/network/interfaces.j2'
+    dest: '/etc/network/interfaces'
+    owner: 'root'
+    group: 'root'
+    mode: 0644
+  when: not verify_network_changes or copy_main_iface.changed

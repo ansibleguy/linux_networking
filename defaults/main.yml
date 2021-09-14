@@ -1,12 +1,29 @@
 ---
 
+# empty config as fallback
+interfaces: {}
+
+# dependencies
+#   controller:
+#     python-netaddr / python3-netaddr must be installed
+
 # main switches
+configure_vlan_support: false
+configure_traffic_forwarding: false  # if the server should act as a router (per example vpn-gateway)
+configure_ipv6_disable: false
+configure_bonding_support: false
+configure_bridge_support: false
+configure_startup_service: false
+  # the startup-service will enable the configuration of custom interfaces and routing
+  # it hooks into the default 'networking.service' so it gets applied every time the network gets reloaded
+purge_orphaned_interfaces: true
 install_nw_tools: true
 verify_network_changes: true
   # a python3 script (running as systemd service) will test your hosts network connectivity before and after network configuration-changes
   # if the verification fails the network configuration will be restored to the old state
-  # this should help you to prevent locking yourself out of remote systems
+  # this should help you to prevent locking yourself out of remote systems and troubleshooting config-errors (/etc/network/interfaces* will be copied to /tmp/ if an error occurs)
   # my inspiration for this feature comes from the handling by barracuda network-firewalls
+
 
 # basic important config
 backup_config: false  # if the ansible backup-flag should be set for important config-files; has noting to do with the verification-restore
@@ -19,14 +36,57 @@ startup_script: 'startup.sh'
 startup_service: 'ansibleguy.base-network.startup.service'
 startup_syslog_id: 'ansibleguy.base-network.startup'
 
-startup_interfaces: []  # a list of custom 'ip link add...' commands
-startup_routes: []  # a list of custom 'ip route add...' commands
+startup_interfaces: {}  # a dictionary of interfaces to be created by this role
+# example:
+#  tunnel01:
+#    type: 'vti'
+#    args:
+#      key: 32
+#      local: '192.168.133.1'
+#      remote: '192.168.133.2'
+#    addr: ['192.168.132.254/24']
+
+startup_interfaces_cmd: {}  # a dictionary of custom 'ip link add...' commands
+# example:
+#  startup_interfaces_cmd:
+#    - 'ip link add name gre1 type ip6gre local LOCAL_IPv6_ADDR remote REMOTE_IPv6_ADDR'
+#    - 'ip link add name gretap1 type ip6gretap local LOCAL_IPv6_ADDR remote REMOTE_IPv6_ADDR'
+#   for more examples see: https://developers.redhat.com/blog/2019/05/17/an-introduction-to-linux-virtual-interfaces-tunnels
+
+startup_routes: {}  # a dictionary of routes to be created by this role
+# example:
+#   startup_routes:
+#     '192.168.142.1':  # gateway to use; can be ip or device name
+#       - net: 10.10.42.0/22  # network to route
+#         metric: 50  # settings like route-metric
+
+startup_routes_cmd: {}  # a dictionary of custom 'ip route add...' commands
+# example:
+#  startup_interfaces_cmd:
+#    - 'ip route add 10.10.42.0/22 dev tunnel0'
+#    - 'ip route add 0.0.0.0 via 192.168.22.1 metric 200'
 
 # tools
 install_nw_tools_list:
   - 'iftop'
   - 'net-tools'
   - 'dnsutils'
+
+# network interface settings
+#   for more details see: https://wiki.debian.org/NetworkConfiguration
+default_interface_config:
+  auto: true
+  ipv: 4  # we could also check the set ip-address type.. not yet implemented
+  method: 'static'
+  hotplug: true
+  nameservers: ['8.8.8.8', '1.1.1.1']
+  subnets: []
+  switching: false
+  vlan: false
+  bonding:
+    bond-downdelay: 200
+    bond-updelay: 200
+    bond-miimon: 100
 
 # network change-verification settings
 network_verification:
@@ -36,7 +96,8 @@ network_verification:
   apply_timeout: "{{ network_apply_timeout }}"
   logging: 1  # 1/0 = yes/no
   syslog_id: 'ansibleguy.base-network.activate_network'
-  tests:
+
+network_tests:
     # could be a list of some internal addresses that MUST BE reachable
     # you might need to modify the default rule if icmp-ping is blocked in the network
     ping:
@@ -50,8 +111,17 @@ network_verification_packages:
   - 'fping'
   - 'netcat'
 
-# you shouldn't have a need to change these verification-settings
+# you shouldn't have a need to change these settings
 network_verification_script: 'activate_network.py'
 network_verification_backup_path_separator: '___'
-network_verification_log_output_lines: 5
+network_verification_log_output_lines: 7
 network_verification_service: 'ansibleguy.base-network.activate_network.service'
+sysctl_traffic_forwarding:
+  'net.ipv4.ip_forward': 1
+  'net.ipv4.conf.all.arp_filter': 0
+  'net.ipv4.conf.all.rp_filter': 2
+sysctl_disable_ipv6:
+  'net.ipv6.conf.all.disable_ipv6': 1
+  'net.ipv6.conf.default.disable_ipv6': 1
+  'net.ipv6.conf.lo.disable_ipv6': 1
+possible_bonding_modes: ['balance-rr', 'active-backup', 'balance-xor', 'broadcast', '802.3ad', 'balance-tlb', 'balance-alb', 0, 1, 2, 3, 4, 5, 6, '0', '1', '2', '3', '4', '5', '6', 'lacp']

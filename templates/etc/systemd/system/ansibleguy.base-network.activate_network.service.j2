@@ -5,8 +5,8 @@ Documentation=https://github.com/ansibleguy/base-network
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/python3 {{ network_script_dir }}/{{ network_verification_script }}
-StandardOutput=syslog
-StandardError=syslog
+StandardOutput=journal
+StandardError=journal
 SyslogIdentifier={{ network_verification.syslog_id }}
 
 Environment="PYTHONUNBUFFERED=1"
