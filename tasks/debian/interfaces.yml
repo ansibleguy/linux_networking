@@ -15,6 +15,7 @@
   register: installed_interfaces
   when: purge_orphaned_interfaces
   check_mode: false
+  changed_when: false
 
 - name: Network | Debian | Interfaces | Purging orphaned interfaces
   ansible.builtin.include_tasks: debian/purge.yml

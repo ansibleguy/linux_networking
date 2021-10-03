@@ -131,6 +131,7 @@ def restore_config():
 def apply_config():
     log("Applying new network config!", level=2)
     os_system('systemctl restart networking.service')
+    # todo: I think we need to "1. stop networking, 2. flush ip's and so on, 3. re-start networking" so it is a more 'clean' state
 
 
 # back-up old network config is done by the ansible role (when changed in check mode - copy to backup-dir before modifying)
