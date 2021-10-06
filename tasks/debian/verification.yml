@@ -47,6 +47,7 @@
 - name: Network | Debian | NW-Verifier | Getting network activation logs
   ansible.builtin.command: "journalctl -u {{ network_verification_service }} --no-pager -n {{ network_verification_log_output_lines }}"
   register: network_activation
+  changed_when: false
 
 - name: Network | Debian | NW-Verifier | Here are the last logs of the network activation
   debug:
