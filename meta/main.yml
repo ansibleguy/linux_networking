@@ -1,0 +1,16 @@
+---
+
+galaxy_info:
+  author: 'AnsibleGuy'
+  description: 'Role to configure network interfaces and routing on linux servers'
+  platforms:
+    - name: Debian
+      versions:
+        - bullseye
+  galaxy_tags:
+    - 'network'
+    - 'interfaces'
+    - 'routing'
+    - 'bridge'
+    - 'bonding'
+    - 'vlan'
