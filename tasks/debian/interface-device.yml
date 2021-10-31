@@ -58,4 +58,3 @@
     group: 'root'
     mode: 0644
   when: not verify_network_changes or copy_device_iface.changed
-

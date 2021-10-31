@@ -1,5 +1,10 @@
 ---
 
+- name: Network | Debian-Based | Ubuntu => ask User
+  pause:
+    prompt: 'This role does currently not support the configuration of interfaces on ubuntu systems! Do you want to continue to run the basic tasks?'
+  when: ansible_distribution|lower == 'ubuntu'
+
 - name: Network | Debian-Based | Remove old verifier config-backups
   ansible.builtin.file:
     path: "{{ network_script_dir }}/backup"
@@ -146,5 +151,5 @@
     - ufw_config is undefined or (ufw_config.policy_forward is defined and ufw_config.policy_forward == 'DROP')
 
 - name: Network | Debian-Based | Processing debian config
-  ansible.builtin.import_tasks: distro_debian.yml
+  ansible.builtin.import_tasks: debian/main.yml
   when: ansible_distribution|lower == 'debian'

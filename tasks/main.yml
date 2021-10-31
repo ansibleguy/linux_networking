@@ -1,5 +1,5 @@
 ---
 
 - name: Network | Processing debian-based config
-  ansible.builtin.import_tasks: based_debian.yml
+  ansible.builtin.import_tasks: debian_ubuntu.yml
   when: "ansible_distribution|lower in ['debian', 'ubuntu']"
