@@ -1,11 +1,13 @@
 ---
 
 galaxy_info:
-  authors: ['AnsibleGuy <guy@ansibleguy.net>']
-  readme: 'ReadMe.md'
-  license: ['MIT']
-  version: '1.0'
+  author: 'AnsibleGuy <guy@ansibleguy.net>'
+  readme: 'README.md'
+  license: 'MIT'
   repository: 'https://github.com/ansibleguy/base-network'
+  issue_tracker_url: 'https://github.com/ansibleguy/base-network/issues'
+  github_branch: 'stable'
+  min_ansible_version: 2.9.0
   description: 'Role to configure network interfaces and routing on linux servers'
   platforms:
     - name: Debian
