@@ -20,7 +20,7 @@
 
 - name: Network | Debian | Startup | Checking if script changed
   ansible.builtin.template:
-    src: "templates/usr/local/sbin/ansibleguy.base-network/startup.sh.j2"
+    src: "templates/usr/local/sbin/ansibleguy.linux_networking/startup.sh.j2"
     dest: "{{ network_script_dir }}/{{ startup_script }}"
     owner: 'root'
     group: 'root'
@@ -43,7 +43,7 @@
 
 - name: Network | Debian | Startup | Copying script
   ansible.builtin.template:
-    src: "templates/usr/local/sbin/ansibleguy.base-network/startup.sh.j2"
+    src: "templates/usr/local/sbin/ansibleguy.linux_networking/startup.sh.j2"
     dest: "{{ network_script_dir }}/{{ startup_script }}"
     owner: 'root'
     group: 'root'
@@ -59,7 +59,7 @@
     group: 'root'
     mode: 0644
   with_items:
-    - {src: 'ansibleguy.base-network.startup.service.j2', dst: "{{ startup_service }}"}
+    - {src: 'ansibleguy.linux_networking.startup.service.j2', dst: "{{ startup_service }}"}
     - {src: 'networking.service.d/override.conf.j2', dst: 'networking.service.d/override.conf'}
 
 - name: Network | Debian | Startup | Systemd daemon-reload

@@ -27,14 +27,14 @@ verify_network_changes: true
 
 # basic important config
 backup_config: false  # if the ansible backup-flag should be set for important config-files; has noting to do with the verification-restore
-network_script_dir: '/usr/local/sbin/ansibleguy.base-network'
+network_script_dir: '/usr/local/sbin/ansibleguy.linux_networking'
 network_apply_timeout: 30  # how long ansible will wait for a re-established ssh connection
 
 # startup service config
 #   for custom interfaces and non-interface-bound routes (like gateway routes and so on..)
 startup_script: 'startup.sh'
-startup_service: 'ansibleguy.base-network.startup.service'
-startup_syslog_id: 'ansibleguy.base-network.startup'
+startup_service: 'ansibleguy.linux_networking.startup.service'
+startup_syslog_id: 'ansibleguy.linux_networking.startup'
 
 startup_interfaces: {}  # a dictionary of interfaces to be created by this role
 # example:
@@ -95,7 +95,7 @@ network_verification:
   test_timeout: 1  # timeout per test in seconds
   apply_timeout: "{{ network_apply_timeout }}"
   logging: 1  # 1/0 = yes/no
-  syslog_id: 'ansibleguy.base-network.activate_network'
+  syslog_id: 'ansibleguy.linux_networking.activate_network'
 
 network_tests:
     # could be a list of some internal addresses that MUST BE reachable
@@ -115,7 +115,7 @@ network_verification_packages:
 network_verification_script: 'activate_network.py'
 network_verification_backup_path_separator: '___'
 network_verification_log_output_lines: 7
-network_verification_service: 'ansibleguy.base-network.activate_network.service'
+network_verification_service: 'ansibleguy.linux_networking.activate_network.service'
 sysctl_traffic_forwarding:
   'net.ipv4.ip_forward': 1
   'net.ipv4.conf.all.arp_filter': 0
