@@ -1,3 +1,0 @@
-# python/pip requirements for the controller system
-netaddr
-# ALTERNATE: apt install python3-netaddr OR apt install python-netaddr

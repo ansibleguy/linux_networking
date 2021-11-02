@@ -31,6 +31,11 @@ Ansible role to configure network interfaces and routing on linux servers
 
 **Note:** Most of this functionality can be opted in or out using the main defaults file and variables!
 
+## Requirements
+
+* Python 'netaddr' module on the controller.
+* Community and posix collection: ```ansible-galaxy install -r requirements.yml```
+
 ## Usage
 
 Define the network config as needed:
@@ -100,6 +105,11 @@ startup_routes:
 
 startup_routes_cmd:
   - 'ip route add 0.0.0.0/0 via 192.168.142.254 metric 200'
+```
+
+Run the playbook:
+```bash
+ansible-playbook -K -D -i inventory/hosts.yml playbook.yml
 ```
 
 ### Example

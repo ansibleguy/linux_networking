@@ -1,0 +1,10 @@
+---
+
+# ansible-playbook -K -D -i inventory/hosts.yml playbook.yml
+
+- hosts: all
+  become: true
+#  vars:
+#    the network config needs to be set in the inventory hosts
+  roles:
+  - ansibleguy.linux_networking

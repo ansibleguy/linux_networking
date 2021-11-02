@@ -1,7 +1,22 @@
 ---
 
+- name: Network | Debian-Based | Installing dependencies on controller
+  ansible.builtin.apt:
+    name: "{{ controller_requirements }}"
+    state: present
+  delegate_to: localhost
+  register: install_controller_requirements
+  ignore_errors: true
+
+- name: Network | Debian-Based | Notify User
+  ansible.builtin.pause:
+    prompt: "You need to install the python module 'netaddr' for this role to work!"
+  when:
+    - install_controller_requirements.failed is defined
+    - install_controller_requirements.failed
+
 - name: Network | Debian-Based | Ubuntu => ask User
-  pause:
+  ansible.builtin.pause:
     prompt: 'This role does currently not support the configuration of interfaces on ubuntu systems! Do you want to continue to run the basic tasks?'
   when: ansible_distribution|lower == 'ubuntu'
 
@@ -71,7 +86,7 @@
     - 'mii'
 
 - name: Network | Debian-Based | Add the bonding module for nic-teaming support (2/2)
-  command: "echo {{ item }} >> /etc/modules"
+  ansible.builtin.command: "echo {{ item }} >> /etc/modules"
   when: prerequisite_bonding_mod.changed
   tags: interfaces
   with_items:

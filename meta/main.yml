@@ -20,3 +20,6 @@ galaxy_info:
     - 'bridge'
     - 'bonding'
     - 'vlan'
+
+collections:
+  - 'community.general'

@@ -50,5 +50,5 @@
   changed_when: false
 
 - name: Network | Debian | NW-Verifier | Here are the last logs of the network activation
-  debug:
+  ansible.builtin.debug:
     msg: "{{ network_activation.stdout_lines[1:-2] }}"
