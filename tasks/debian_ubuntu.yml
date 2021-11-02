@@ -1,8 +1,8 @@
 ---
 
 - name: Network | Debian-Based | Installing dependencies on controller
-  ansible.builtin.apt:
-    name: "{{ controller_requirements }}"
+  ansible.builtin.pip:
+    name: "{{ controller_required_mods }}"
     state: present
   delegate_to: localhost
   register: install_controller_requirements
@@ -10,7 +10,7 @@
 
 - name: Network | Debian-Based | Notify User
   ansible.builtin.pause:
-    prompt: "You need to install the python module 'netaddr' for this role to work!"
+    prompt: "You need to install the python module 'netaddr' for this role to work correctly!"
   when:
     - install_controller_requirements.failed is defined
     - install_controller_requirements.failed
