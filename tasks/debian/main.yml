@@ -1,25 +1,25 @@
 ---
 
 - name: Network | Debian | Configuring startup-service
-  ansible.builtin.import_tasks: debian/startup.yml
+  ansible.builtin.import_tasks: startup.yml
   when: configure_startup_service
   tags:
     - routing
     - interfaces
 
 - name: Network | Debian | Configuring network interfaces
-  ansible.builtin.import_tasks: debian/interfaces.yml
+  ansible.builtin.import_tasks: interfaces.yml
   tags: interfaces
   when:
     - network_interfaces is defined
     - network_interfaces | length > 0
 
 - name: Network | Debian | Applying network config via verifier
-  ansible.builtin.import_tasks: debian/verification.yml
+  ansible.builtin.import_tasks: verification.yml
   when: verify_network_changes
   tags: always
 
 - name: Network | Debian | Applying network config w/o verification
-  ansible.builtin.import_tasks: debian/apply.yml
+  ansible.builtin.import_tasks: apply.yml
   when: not verify_network_changes
   tags: always

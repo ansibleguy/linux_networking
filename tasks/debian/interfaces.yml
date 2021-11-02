@@ -18,7 +18,7 @@
   changed_when: false
 
 - name: Network | Debian | Interfaces | Purging orphaned interfaces
-  ansible.builtin.include_tasks: debian/purge.yml
+  ansible.builtin.include_tasks: purge.yml
   loop_control:
     loop_var: iface_name
   with_items: "{{ installed_interfaces.stdout_lines }}"
@@ -27,7 +27,7 @@
     - iface_name not in network_interfaces
 
 - name: Network | Debian | Interfaces | Configuring network interfaces
-  ansible.builtin.include_tasks: debian/interface-device.yml
+  ansible.builtin.include_tasks: interface-device.yml
   with_dict: "{{ network_interfaces }}"
   loop_control:
     loop_var: iface
