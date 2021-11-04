@@ -2,34 +2,49 @@
 
 Ansible role to configure network interfaces and routing on linux servers 
 
-**Note:** this role currently only supports debian systems (_ubuntu partly_)
 
 **Tested:**
 * Debian 11
 
 ## Functionality
 
-* Network interfaces
+* **Network interfaces**
   * bridges
   * bonding
   * vlans
-* Static routing
+
+
+* **Static routing**
   * via interface up-/down-scripts
   * via startup service
-* Default opt-in:
+
+
+* **Default opt-in**:
   * anti-lockout via network verification service
   * installing basic network-diagnostic tools
   * purging of orphaned interfaces
-* Default opt-out:
+
+
+* **Default opt-out**:
   * network startup-service to allow custom configurations
   * interface bonding support
   * interface vlan support
   * traffic forwarding support (_router-like_)
   * disabling ipv6
 
-**Note:** This role does not (_yet_) support IPv6!
+## Info
 
-**Note:** Most of this functionality can be opted in or out using the main defaults file and variables!
+* **Note:** This role does not (_yet_) support IPv6!
+
+
+* **Note:** this role currently only supports debian systems (_ubuntu partly_)
+
+
+* **Note:** Most of this functionality can be opted in or out using the main defaults file and variables!
+
+
+* **Warning:** Not every setting/variable you provide will be checked for validity. Bad config might break the role!
+
 
 ## Requirements
 
