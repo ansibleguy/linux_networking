@@ -38,6 +38,8 @@ Ansible role to configure network interfaces and routing on linux servers
 
 ## Usage
 
+### Config
+
 Define the network config as needed:
 ```yaml
 configure_vlan_support: true
@@ -106,6 +108,8 @@ startup_routes:
 startup_routes_cmd:
   - 'ip route add 0.0.0.0/0 via 192.168.142.254 metric 200'
 ```
+
+### Execution
 
 Run the playbook:
 ```bash
