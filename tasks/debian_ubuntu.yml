@@ -7,6 +7,7 @@
   delegate_to: localhost
   register: install_controller_requirements
   ignore_errors: true
+  become: false
 
 - name: Network | Debian-Based | Notify User
   ansible.builtin.pause:
@@ -125,7 +126,7 @@
     - routing
     - interfaces
 
-- name: Network | Debian-Based | Resloading network after prerequisit-changes
+- name: Network | Debian-Based | Reloading network after prerequisit-changes
   ansible.builtin.systemd:
     name: 'networking.service'
     state: restarted
