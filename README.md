@@ -1,6 +1,6 @@
 # Ansible Linux-Network role
 
-Ansible role to configure network interfaces and routing on linux servers 
+Ansible Role to deploy network configuration/interfaces on linux servers. 
 
 
 **Tested:**
