@@ -2,13 +2,13 @@
 
 - name: Network | Debian | NW-Verifier | Installing network verification tools
   ansible.builtin.apt:
-    name: "{{ network_verification_packages }}"
+    name: "{{ NW_HC.verification.packages }}"
     state: present
 
 - name: Network | Debian | NW-Verifier | Copying verification script
   ansible.builtin.template:
     src: 'templates/usr/local/sbin/ansibleguy.linux_networking/activate_network.py.j2'
-    dest: "{{ network_script_dir }}/{{ network_verification_script }}"
+    dest: "{{ NW_HC.network_script_dir }}/{{ NW_HC.verification.script }}"
     owner: 'root'
     group: 'root'
     mode: 0755
@@ -16,7 +16,7 @@
 - name: Network | Debian | NW-Verifier | Copying verification service
   ansible.builtin.template:
     src: 'templates/etc/systemd/system/ansibleguy.linux_networking.activate_network.service.j2'
-    dest: "/etc/systemd/system/{{ network_verification_service }}"
+    dest: "/etc/systemd/system/{{ NW_HC.verification.service }}"
     owner: 'root'
     group: 'root'
     mode: 0644
@@ -24,14 +24,19 @@
 - name: Network | Debian | NW-Verifier | Starting verification service
   ansible.builtin.systemd:
     daemon_reload: yes
-    name: "{{ network_verification_service }}"
+    name: "{{ NW_HC.verification.service }}"
     state: started
   ignore_errors: true
-  timeout: 5
+  timeout: 15
+
+- name: Network | Debian | NW-Verifier | Updating ip used in this execution
+  ansible.builtin.set_fact:
+    ansible_host: "{{ post_apply_ip }}"
+  when: NW.post_apply_ip is defined
 
 - name: Network | Debian | NW-Verifier | Waiting to re-establish connection
   ansible.builtin.wait_for_connection:
-    timeout: "{{ network_verification.apply_timeout }}"
+    timeout: "{{ NW.verification.apply_timeout }}"
   register: connection_restore
   ignore_errors: true
 
@@ -45,7 +50,7 @@
     - connection_restore.failed
 
 - name: Network | Debian | NW-Verifier | Getting network activation logs
-  ansible.builtin.command: "journalctl -u {{ network_verification_service }} --no-pager -n {{ network_verification_log_output_lines }}"
+  ansible.builtin.command: "journalctl -u {{ NW_HC.verification.service }} --no-pager -n {{ NW_HC.verification.log_output_lines }}"
   register: network_activation
   changed_when: false
 

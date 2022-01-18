@@ -5,11 +5,16 @@
     name: 'networking.service'
     state: restarted
   ignore_errors: true
-  timeout: 5
+  timeout: 15
+
+- name: Network | Debian | Apply | Updating ip used in this execution
+  ansible.builtin.set_fact:
+    ansible_host: "{{ post_apply_ip }}"
+  when: NW.post_apply_ip is defined
 
 - name: Network | Debian | Apply | Waiting to re-establish connection
   ansible.builtin.wait_for_connection:
-    timeout: "{{ network_apply_timeout }}"
+    timeout: "{{ NW_HC.network_apply_timeout }}"
   register: connection_restore
   ignore_errors: true
 

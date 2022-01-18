@@ -1,60 +1,56 @@
 ---
 
-- name: "Network | Debian  | Interface | {{ iface.key }} | Setting vars"
-  ansible.builtin.set_fact:
-    iface_file: "/etc/network/interfaces.d/{{ iface.key }}"
-    copy_device_iface:
-    copy_device_iface_file:
-
-- name: "Network | Debian  | Interface | {{ iface.key }} | Checking if main interface file exists"
+- name: "Network | Debian  | Interface | {{ name }} | Checking if main interface file exists"
   ansible.builtin.stat:
-    path: "{{ iface_file }}"
-  register: copy_device_iface_file
+    path: "{{ file }}"
+  register: iface_file_1
   changed_when: false
   check_mode: false
-  when: verify_network_changes
+  when: NW.verification.enable
 
-- name: "Network | Debian  | Interface | {{ iface.key }} | Checking if main interface file changed"
+- name: "Network | Debian  | Interface | {{ name }} | Checking if main interface file changed"
   ansible.builtin.template:
     src: 'templates/etc/network/interfaces.d/int.j2'
-    dest: "{{ iface_file }}"
+    dest: "{{ file }}"
     owner: 'root'
     group: 'root'
     mode: 0644
   check_mode: true
-  register: copy_device_iface
-  when: verify_network_changes
+  register: iface_file_2
+  when: NW.verification.enable
 
-- name: "Network | Debian  | Interface | {{ iface.key }} | Backing-up current config if changed/exists"
+- name: "Network | Debian  | Interface | {{ name }} | Backing-up current config if changed/exists"
   ansible.builtin.copy:
-    src: "{{ iface_file }}"
+    src: "{{ file }}"
     remote_src: true
-    dest: "{{ network_script_dir }}/backup/{{ iface_file | replace('/', network_verification_backup_path_separator) }}"
+    dest: "{{ NW_HC.network_script_dir }}/backup/{{ file | replace('/', NW_HC.verification.backup_path_separator) }}"
     owner: 'root'
     group: 'root'
     mode: 0644
   when:
-    - verify_network_changes
-    - copy_device_iface_file.stat.exists
-    - copy_device_iface.changed
+    - NW.verification.enable
+    - iface_file_1.stat.exists
+    - iface_file_2.changed
 
-- name: "Network | Debian  | Interface | {{ iface.key }} | Backing-up empty file"
+- name: "Network | Debian  | Interface | {{ name }} | Backing-up empty file"
   ansible.builtin.file:
-    path: "{{ network_script_dir }}/backup/{{ iface_file | replace('/', network_verification_backup_path_separator) }}"
+    path: "{{ NW_HC.network_script_dir }}/backup/{{ file | replace('/', NW_HC.verification.backup_path_separator) }}"
     state: touch
     owner: 'root'
     group: 'root'
     mode: 0644
   when:
-    - verify_network_changes
-    - not copy_device_iface_file.stat.exists
-    - copy_device_iface.changed
+    - NW.verification.enable
+    - not iface_file_1.stat.exists
+    - iface_file_2.changed
 
-- name: "Network | Debian  | Interface | {{ iface.key }} | Copying main interface file"
+- name: "Network | Debian  | Interface | {{ name }} | Copying main interface file"
   ansible.builtin.template:
     src: 'templates/etc/network/interfaces.d/int.j2'
-    dest: "{{ iface_file }}"
+    dest: "{{ file }}"
     owner: 'root'
     group: 'root'
     mode: 0644
-  when: not verify_network_changes or copy_device_iface.changed
+  when: >
+    not NW.verification.enable or 
+    iface_file_2.changed

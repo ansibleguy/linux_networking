@@ -7,13 +7,13 @@
     group: 'root'
     state: directory
     mode: 0755
-  with_items:
-    - "{{ network_script_dir }}"
+  loop:
+    - "{{ NW_HC.network_script_dir }}"
     - '/etc/systemd/system/networking.service.d'
 
 - name: Network | Debian | Startup | Checking if script exists
   ansible.builtin.stat:
-    path: "{{ network_script_dir }}/{{ startup_script }}"
+    path: "{{ NW_HC.network_script_dir }}/{{ startup_script }}"
   register: copy_startup_script_file
   changed_when: false
   check_mode: false
@@ -21,7 +21,7 @@
 - name: Network | Debian | Startup | Checking if script changed
   ansible.builtin.template:
     src: "templates/usr/local/sbin/ansibleguy.linux_networking/startup.sh.j2"
-    dest: "{{ network_script_dir }}/{{ startup_script }}"
+    dest: "{{ NW_HC.network_script_dir }}/{{ startup_script }}"
     owner: 'root'
     group: 'root'
     mode: 0755
@@ -30,26 +30,27 @@
 
 - name: Network | Debian | Startup | Backing-up current config if changed/exists
   ansible.builtin.copy:
-    src: "{{ network_script_dir }}/{{ startup_script }}"
+    src: "{{ NW_HC.network_script_dir }}/{{ startup_script }}"
     remote_src: true
-    dest: "{{ network_script_dir }}/backup/{{ network_script_dir | replace('/', network_verification_backup_path_separator) }}{{ network_verification_backup_path_separator }}{{ startup_script }}"
+    dest: "{{ NW_HC.network_script_dir }}/backup/{{ NW_HC.network_script_dir | replace('/', NW_HC.verification.backup_path_separator) }}{{ NW_HC.verification.backup_path_separator }}{{ startup_script }}"
     owner: 'root'
     group: 'root'
     mode: 0755
   when:
-    - verify_network_changes
+    - NW.verification.enable
     - copy_startup_script_file.stat.exists
     - copy_startup_script.changed
 
 - name: Network | Debian | Startup | Copying script
   ansible.builtin.template:
     src: "templates/usr/local/sbin/ansibleguy.linux_networking/startup.sh.j2"
-    dest: "{{ network_script_dir }}/{{ startup_script }}"
+    dest: "{{ NW_HC.network_script_dir }}/{{ startup_script }}"
     owner: 'root'
     group: 'root'
     mode: 0755
-    backup: "{{ backup_config }}"
-  when: not verify_network_changes or copy_startup_script.changed
+  when: >
+    not NW.verification.enable or 
+    copy_startup_script.changed
 
 - name: Network | Debian | Startup | Copying service files
   ansible.builtin.template:
@@ -58,8 +59,8 @@
     owner: 'root'
     group: 'root'
     mode: 0644
-  with_items:
-    - {src: 'ansibleguy.linux_networking.startup.service.j2', dst: "{{ startup_service }}"}
+  loop:
+    - {src: 'ansibleguy.linux_networking.startup.service.j2', dst: "{{ NW.startup_service.name }}"}
     - {src: 'networking.service.d/override.conf.j2', dst: 'networking.service.d/override.conf'}
 
 - name: Network | Debian | Startup | Systemd daemon-reload

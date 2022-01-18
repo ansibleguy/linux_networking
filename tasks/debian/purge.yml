@@ -2,23 +2,24 @@
 
 - name: "Network | Debian  | Interface | Purge | {{ iface_name }} | Setting vars"
   ansible.builtin.set_fact:
-    iface_file: "/etc/network/interfaces.d/{{ iface_name }}"
+    file: "/etc/network/interfaces.d/{{ iface_name }}"
 
 - name: "Network | Debian  | Interface | Purge | {{ iface_name }} | Backing-up current config"
   ansible.builtin.copy:
-    src: "{{ iface_file }}"
+    src: "{{ file }}"
     remote_src: true
-    dest: "{{ network_script_dir }}/backup/{{ iface_file | replace('/', network_verification_backup_path_separator) }}"
+    dest: "{{ NW_HC.network_script_dir }}/backup/{{ file | replace('/', NW_HC.verification.backup_path_separator) }}"
     owner: 'root'
     group: 'root'
     mode: 0644
-  when: verify_network_changes
+  when: NW.verification.enable
 
 - name: "Network | Debian  | Interface | Purge | {{ iface_name }} | Removing interface file"
   ansible.builtin.file:
-    path: "{{ iface_file }}"
+    path: "{{ file }}"
     state: absent
 
 - name: "Network | Debian  | Interface | Purge | {{ iface_name }} | Removing interface from running-config"  # is necessary for vlan interfaces and so on
   ansible.builtin.shell: "ip addr flush {{ iface_name }} & ifdown {{ iface_name }} & udevadm settle & ip link delete {{ iface_name }}"
   ignore_errors: true
+  when: "':' not in iface_name"  # else it will kill the main iface when an alias should get deleted..

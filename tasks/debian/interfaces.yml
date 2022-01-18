@@ -13,7 +13,7 @@
 - name: Getting current configured interfaces
   ansible.builtin.command: 'ls /etc/network/interfaces.d/'
   register: installed_interfaces
-  when: purge_orphaned_interfaces
+  when: NW.purge_orphaned_interfaces
   check_mode: false
   changed_when: false
 
@@ -21,19 +21,27 @@
   ansible.builtin.include_tasks: purge.yml
   loop_control:
     loop_var: iface_name
-  with_items: "{{ installed_interfaces.stdout_lines }}"
+  loop: "{{ installed_interfaces.stdout_lines }}"
   no_log: true
   when:
-    - purge_orphaned_interfaces
-    - iface_name not in network_interfaces
+    - NW.purge_orphaned_interfaces
+    - iface_name not in NW.interfaces
 
 - name: Network | Debian | Interfaces | Configuring network interfaces
   ansible.builtin.include_tasks: interface-device.yml
-  with_dict: "{{ network_interfaces }}"
+  when: >
+    (iface.address is defined and iface.address|ansible.netcommon.ipaddr) or
+    iface.method == 'dhcp'
+  vars:
+    iface: "{{ default_interface_config | combine(iface_item.value, recursive=true) }}"
+    name: "{{ iface_item.key }}"
+    file: "/etc/network/interfaces.d/{{ name }}"
+    copy_device_iface:
+    copy_device_iface_file:
   loop_control:
-    loop_var: iface
+    loop_var: iface_item
+  with_dict: "{{ NW.interfaces }}"
   no_log: true
-  when: iface.key is defined
 
 - name: Network | Debian  | Interfaces | Checking if main interface file changed
   ansible.builtin.template:
@@ -44,18 +52,18 @@
     mode: 0644
   check_mode: true
   register: copy_main_iface
-  when: verify_network_changes
+  when: NW.verification.enable
 
 - name: Network | Debian | Interfaces | Backing-up current config if changed/exists
   ansible.builtin.copy:
     src: '/etc/network/interfaces'
     remote_src: true
-    dest: "{{ network_script_dir }}/backup/{{ '/etc/network/interfaces' | replace('/', network_verification_backup_path_separator) }}"
+    dest: "{{ NW_HC.network_script_dir }}/backup/{{ '/etc/network/interfaces' | replace('/', NW_HC.verification.backup_path_separator) }}"
     owner: 'root'
     group: 'root'
     mode: 0644
   when:
-    - verify_network_changes
+    - NW.verification.enable
     - copy_main_iface.changed
 
 - name: Network | Debian  | Interfaces | Copying main interface file
@@ -65,4 +73,6 @@
     owner: 'root'
     group: 'root'
     mode: 0644
-  when: not verify_network_changes or copy_main_iface.changed
+  when: > 
+    not NW.verification.enable or 
+    copy_main_iface.changed

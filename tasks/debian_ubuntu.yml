@@ -2,7 +2,7 @@
 
 - name: Network | Debian-Based | Installing dependencies on controller
   ansible.builtin.pip:
-    name: "{{ controller_required_mods }}"
+    name: "{{ NW_HC.controller_required_mods }}"
     state: present
   delegate_to: localhost
   register: install_controller_requirements
@@ -23,34 +23,34 @@
 
 - name: Network | Debian-Based | Remove old verifier config-backups
   ansible.builtin.file:
-    path: "{{ network_script_dir }}/backup"
+    path: "{{ NW_HC.network_script_dir }}/backup"
     state: absent
-  when: verify_network_changes
-  tags: always
+  when: NW.verification.enable
+  tags: [routing, interfaces, base]
   changed_when: false
 
 - name: Network | Debian-Based | Re-creating verifier backup-directory
   ansible.builtin.file:
-    path: "{{ network_script_dir }}/backup"
+    path: "{{ NW_HC.network_script_dir }}/backup"
     owner: 'root'
     group: 'root'
     state: directory
     mode: 0755
-  when: verify_network_changes
-  tags: always
+  when: NW.verification.enable
+  tags: [routing, interfaces, base]
   changed_when: false
 
 - name: Network | Debian-Based | Installing network tools
   ansible.builtin.apt:
-    name: "{{ install_nw_tools_list }}"
+    name: "{{ NW.tools }}"
     state: present
-  when: install_nw_tools
+  when: NW.install_tools
 
 - name: Network | Debian-Based | Installing vlan package
   ansible.builtin.apt:
     name: ['vlan']
     state: present
-  when: configure_vlan_support
+  when: NW.support.vlan
   tags: interfaces
   register: prerequisite_vlan_pkg
 
@@ -58,7 +58,7 @@
   community.general.modprobe:
     name: '8021q'
     state: present
-  when: configure_vlan_support
+  when: NW.support.vlan
   tags: interfaces
   register: prerequisite_vlan_mod
 
@@ -71,7 +71,7 @@
   ansible.builtin.apt:
     name: ['ifenslave']
     state: present
-  when: configure_bonding_support
+  when: NW.support.bonding
   tags: interfaces
   register: prerequisite_bonding_pkg
 
@@ -79,10 +79,10 @@
   community.general.modprobe:
     name: "{{ item }}"
     state: present
-  when: configure_bonding_support
+  when: NW.support.bonding
   tags: interfaces
   register: prerequisite_bonding_mod
-  with_items:
+  loop:
     - 'bonding'
     - 'mii'
 
@@ -90,7 +90,7 @@
   ansible.builtin.command: "echo {{ item }} >> /etc/modules"
   when: prerequisite_bonding_mod.changed
   tags: interfaces
-  with_items:
+  loop:
     - 'bonding'
     - 'mii'
 
@@ -98,7 +98,7 @@
   ansible.builtin.apt:
     name: ['bridge-utils']
     state: present
-  when: configure_bridge_support
+  when: NW.support.bridge
   tags: interfaces
   register: prerequisite_bridge_pkg
 
@@ -109,8 +109,8 @@
     sysctl_set: yes
     state: present
     reload: yes
-  with_dict: "{{ sysctl_traffic_forwarding }}"
-  when: configure_traffic_forwarding
+  with_dict: "{{ NW_HC.sysctl.traffic_forwarding }}"
+  when: NW.support.traffic_forwarding
   tags: routing
 
 - name: Network | Debian-Based | Configuring sysctl to disable ipv6
@@ -120,18 +120,16 @@
     sysctl_set: yes
     state: present
     reload: yes
-  with_dict: "{{ sysctl_disable_ipv6 }}"
-  when: configure_ipv6_disable
-  tags:
-    - routing
-    - interfaces
+  with_dict: "{{ NW_HC.sysctl.disable_ipv6 }}"
+  when: not NW.support.ipv6
+  tags: [routing, interfaces]
 
 - name: Network | Debian-Based | Reloading network after prerequisit-changes
   ansible.builtin.systemd:
     name: 'networking.service'
     state: restarted
   ignore_errors: true
-  timeout: 5
+  timeout: 15
   when: >
     (prerequisite_vlan_mod is defined and prerequisite_vlan_mod.changed) or
     (prerequisite_vlan_pkg is defined and prerequisite_vlan_pkg.changed) or
@@ -141,14 +139,14 @@
 
 - name: Network | Debian-Based | Waiting to re-establish connection
   ansible.builtin.wait_for_connection:
-    timeout: "{{ network_apply_timeout }}"
+    timeout: "{{ NW_HC.network_apply_timeout }}"
   register: connection_restore
   ignore_errors: true
 
 - name: Network | Debian-Based | Checking if ufw allows forwarded traffic
   ansible.builtin.shell: 'cat /etc/default/ufw | grep FORWARD_POLICY | grep -c DROP'
   register: ufw_policy_forward
-  when: configure_traffic_forwarding
+  when: NW.support.traffic_forwarding
   changed_when: false
   check_mode: false
   tags: routing
@@ -161,7 +159,7 @@
     seconds: 5
   tags: routing
   when:
-    - configure_traffic_forwarding
+    - NW.support.traffic_forwarding
     - ufw_policy_forward.stdout is defined
     - ufw_policy_forward.stdout|int == 1
     - ufw_config is undefined or (ufw_config.policy_forward is defined and ufw_config.policy_forward == 'DROP')

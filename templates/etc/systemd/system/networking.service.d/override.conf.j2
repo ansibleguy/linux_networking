@@ -2,4 +2,4 @@
 # ansibleguy.linux_networking
 
 [Service]
-ExecStartPost=/usr/bin/systemctl restart {{ startup_service }}
+ExecStartPost=/usr/bin/systemctl restart {{ NW.startup_service.name }}

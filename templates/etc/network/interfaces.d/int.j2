@@ -3,55 +3,52 @@
 
 # for more config-details see: https://wiki.debian.org/NetworkConfiguration
 
-{# Catching empty interface #}
-{% set iface_settings = {} if iface.value is none else iface.value %}
-
 {# Basic interface config #}
-{% if iface_settings.auto | default(default_interface_config.auto) %}
-auto {{ iface.key }}
+{% if iface.auto | default(default_interface_config.auto) %}
+auto {{ name }}
 {% else %}
-allow {{ iface.key }}
+allow {{ name }}
 {% endif %}
-{% if iface_settings.hotplug | default(default_interface_config.hotplug) %}
-allow-hotplug {{ iface.key }}
+{% if iface.hotplug | default(default_interface_config.hotplug) %}
+allow-hotplug {{ name }}
 {% endif %}
 
-iface {{ iface.key }} {% if 'family' in iface_settings %}{{ iface_settings.family}}{% else %}{% if iface_settings.ipv | default(default_interface_config.ipv) | int == 4 %}inet{% else %}inet6{% endif %}{% endif %} {% if iface_settings.method | default(default_interface_config.method) == 'static' and 'address' not in iface_settings %}manual{% else %}{{ iface_settings.method | default(default_interface_config.method) }}{% endif %}
+iface {{ name }} {% if 'family' in iface %}{{ iface.family}}{% else %}{% if iface.ipv | default(default_interface_config.ipv) | int == 4 %}inet{% else %}inet6{% endif %}{% endif %} {% if iface.method | default(default_interface_config.method) == 'static' and 'address' not in iface %}manual{% else %}{{ iface.method | default(default_interface_config.method) }}{% endif %}
 
 {% for setting in ['address', 'gateway', 'dns_search', 'mtu'] %}
-{%   if setting in iface_settings %}
-    {{ setting }} {{ iface_settings[setting] }}
+{%   if setting in iface %}
+    {{ setting }} {{ iface[setting] }}
 
 {%   endif %}
 {% endfor %}
 
-{% if 'gateway' in iface_settings %}
-    dns-nameservers {{ iface_settings.nameservers | default(default_interface_config.nameservers) | join(' ') }}
+{% if 'gateway' in iface %}
+    dns-nameservers {{ iface.nameservers | default(default_interface_config.nameservers) | join(' ') }}
 {% endif %}
 
 {# Additional interface settings #}
 
-{% if iface_settings.vlan | default(default_interface_config.vlan) %}
+{% if iface.vlan | default(default_interface_config.vlan) %}
     # vlan settings
-    #  get the current bond-status via: 'cat /proc/net/vlan/{{ iface.key }}'
-{%   if iface.key.find('.') == -1 %}
-    vlan-raw-device {{ iface_settings.vlan-raw-device }}  # if the int is a vlan but is not written in the INT.VID syntax - we'll need to define the parent-interface
+    #  get the current bond-status via: 'cat /proc/net/vlan/{{ name }}'
+{%   if name.find('.') == -1 %}
+    vlan-raw-device {{ iface.vlan-raw-device }}  # if the int is a vlan but is not written in the INT.VID syntax - we'll need to define the parent-interface
 {%   endif %}
 {% endif %}
 
 {# More subnets #}
-{% for subnet in iface_settings.subnets | default(default_interface_config.subnets) %}
-    up /sbin/ip addr add {{ subnet }} dev {{ iface.key }}
-    down /sbin/ip addr del {{ subnet }} dev {{ iface.key }}
+{% for subnet in iface.subnets | default(default_interface_config.subnets) %}
+    up /sbin/ip addr add {{ subnet }} dev {{ name }}
+    down /sbin/ip addr del {{ subnet }} dev {{ name }}
 
 {% endfor %}
 
     # up/down hook scripts
-{% for setting, value in iface_settings.items() %}
+{% for setting, value in iface.items() %}
 {%   if setting.startswith('script_') %}
     # {{ setting | replace('script_', '') }} scripts
 
-{%     for item in iface_settings[setting] %}
+{%     for item in iface[setting] %}
     {{ setting | replace('script_', '') }} {{ item }}
 
 {%     endfor %}
@@ -59,89 +56,89 @@ iface {{ iface.key }} {% if 'family' in iface_settings %}{{ iface_settings.famil
 {% endfor %}
 
     # custom interface types
-{% if 'bridge_ports' in iface_settings %}
+{% if 'bridge_ports' in iface %}
     # bridge settings
-{%   for port in iface_settings.bridge_ports[0]%}
+{%   for port in iface.bridge_ports[0]%}
 {%     if port|length > 1 %}  # if bridge_ports is a list and not a string..
-    bridge_ports {{ iface_settings.bridge_ports | join(' ') }}
+    bridge_ports {{ iface.bridge_ports | join(' ') }}
 
 {%     else %}
-    bridge_ports {{ iface_settings.bridge_ports}}
+    bridge_ports {{ iface.bridge_ports}}
 
 {%     endif %}
 {%   endfor %}
 
     # bridge up-scripts
-{%   if 'address' not in iface_settings %}
-    up /usr/sbin/brctl stp {{ iface.key }} off
+{%   if 'address' not in iface %}
+    up /usr/sbin/brctl stp {{ name }} off
     # to bring bridge up without address
-    up /usr/sbin/brctl setageing {{ iface.key }} 0
+    up /usr/sbin/brctl setageing {{ name }} 0
 {%   else %}
-    up /usr/sbin/brctl stp {{ iface.key }} on
+    up /usr/sbin/brctl stp {{ name }} on
 {%   endif %}
 
-{%   for setting, value in iface_settings.items() %}
+{%   for setting, value in iface.items() %}
 {%     if setting.startswith('bridge_') %}
-{%       if setting != 'bridge_stp' or iface_settings.switching | default(default_interface_config.switching) %}
+{%       if setting != 'bridge_stp' or iface.switching | default(default_interface_config.switching) %}
     {{ setting }} {{ value }}
 
 {%       endif %}
 {%     endif %}
 {%   endfor %}
 
-{%   if not iface_settings.switching | default(default_interface_config.switching) %}
+{%   if not iface.switching | default(default_interface_config.switching) %}
     # to disable mac-learning
-    up /usr/sbin/brctl setageing {{ iface.key }} 0
-    up /usr/sbin/brctl stp {{ iface.key }} off
+    up /usr/sbin/brctl setageing {{ name }} 0
+    up /usr/sbin/brctl stp {{ name }} off
 {%   endif %}
 
 {% endif %}
 
-{% if 'bond-mode' in iface_settings and iface_settings['bond-mode'] in possible_bonding_modes %}
+{% if 'bond-mode' in iface and iface['bond-mode'] in NW_HC.bonding_modes %}
 
   # bonding settings
-    # get the current bond-status via: 'cat /proc/net/bonding/{{ iface.key }}'
-    bond-mode {{ iface_settings['bond-mode'] }}
-    bond-slaves {% for slave in iface_settings['bond-slaves'] %}{{ slave }} {% endfor %}
+    # get the current bond-status via: 'cat /proc/net/bonding/{{ name }}'
+    bond-mode {{ iface['bond-mode'] }}
+    bond-slaves {% for slave in iface['bond-slaves'] %}{{ slave }} {% endfor %}
 
-{%   if iface_settings['bond-mode'] in ['active-backup', 1, '1'] and 'bond-primary' not in iface_settings %}
-    bond-primary {% for slave in iface_settings['bond-slaves'] %}{{ slave }} {% endfor %}
+{%   if iface['bond-mode'] in ['active-backup', 1, '1'] and 'bond-primary' not in iface %}
+    bond-primary {% for slave in iface['bond-slaves'] %}{{ slave }} {% endfor %}
 
 {%   endif %}
-{%   if iface_settings['bond-mode'] in ['802.3ad', 'lacp', 4, '4'] and 'bond-lacp-rate' not in iface_settings %}
+{%   if iface['bond-mode'] in ['802.3ad', 'lacp', 4, '4'] and 'bond-lacp-rate' not in iface %}
     bond-lacp-rate 1  # lacp fast-mode
 
 {%   endif %}
 
     # pull slave interfaces up
-{% for slave in iface_settings['bond-slaves'] %}
+{% for slave in iface['bond-slaves'] %}
     post-up ifup {{ slave }}
 {%   endfor %}
 
     # additional bonding-settings
     # defaults
 {%   for setting, value in default_interface_config.bonding.items() %}
-{%     if setting not in iface_settings %}
+{%     if setting not in iface %}
     {{ setting }} {{ value }}
 {%     endif %}
 {%   endfor %}
 
     # custom
-{%   for setting, value in iface_settings.items() %}
+{%   for setting, value in iface.items() %}
 {%     if setting.startswith('bond-') and setting not in ['bond-mode', 'bond-master', 'bond-slaves'] %}
     {{ setting }} {{ value }}
 {%     endif %}
 {%   endfor %}
 
 # bonding-slave interfaces
-{%   for slave in iface_settings['bond-slaves'] %}
+{%   for slave in iface['bond-slaves'] %}
 allow {{ slave }}
 iface {{ slave }} inet manual
 
 {%   endfor %}
 
-{% elif 'bond-mode' in iface_settings and iface_settings['bond-mode'] not in possible_bonding_modes %}
+{% elif 'bond-mode' in iface and iface['bond-mode'] not in NW_HC.bonding_modes %}
 
-    # bond-mode '{{ iface_settings['bond-mode'] }}' is unsupported! Supported modes: '{{ possible_bonding_modes }}'
+    # bond-mode '{{ iface['bond-mode'] }}' is unsupported! Supported modes: '{{ NW_HC.bonding_modes }}'
 
 {% endif %}

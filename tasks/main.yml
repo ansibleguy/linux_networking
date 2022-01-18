@@ -1,5 +1,11 @@
 ---
 
+- name: Network | Checking config
+  ansible.builtin.fail:
+    msg: "The required configuration was not provided!
+    Needed: 'network'"
+  when: network is undefined
+
 - name: Network | Processing debian-based config
   ansible.builtin.import_tasks: debian_ubuntu.yml
   when: "ansible_distribution|lower in ['debian', 'ubuntu']"

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# {{ ansible_managed }} - role {{ role_name }}
+# {{ ansible_managed }}
+# ansibleguy.linux_networking
 
 log_hl () {
   echo ''
@@ -49,7 +50,7 @@ log_hl 'Configuring scripted interfaces'
 log_hl 'Configuring generated routes'
 {% for gateway, config in startup_routes.items() %}
 {%   for route in config %}
-ip route add {{ route.net }} {% if gateway|ipaddr %}via{% else %}dev{% endif %} {{ gateway }} {% if 'metric' in route %}metric {{ route.metric }}{% endif %}
+ip route add {{ route.net }} {% if gateway|ansible.netcommon.ipaddr %}via{% else %}dev{% endif %} {{ gateway }} {% if 'metric' in route %}metric {{ route.metric }}{% endif %}
 
 {%   endfor %}
 {% endfor %}

@@ -7,10 +7,10 @@ Documentation=https://github.com/ansibleguy/linux_networking
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/python3 {{ network_script_dir }}/{{ network_verification_script }}
+ExecStart=/usr/bin/python3 {{ NW_HC.network_script_dir }}/{{ NW_HC.verification.script }}
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier={{ network_verification.syslog_id }}
+SyslogIdentifier={{ NW.verification.syslog_id }}
 
 Environment="PYTHONUNBUFFERED=1"
 
