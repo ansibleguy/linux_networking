@@ -12,6 +12,7 @@ Ansible Role to deploy network configuration/interfaces on linux servers.
   * bridges
   * bonding
   * vlans
+  * ipv4 & ipv6
 
 
 * **Static routing**
@@ -36,9 +37,6 @@ Ansible Role to deploy network configuration/interfaces on linux servers.
     * traffic forwarding (_router-like_)
 
 ## Info
-
-* **Note:** This role does not (_yet_) support IPv6!
-
 
 * **Note:** Dynamic routing is available using [THIS](https://github.com/ansibleguy/infra_dynamic_routing) role
 
@@ -78,6 +76,10 @@ network:
       address: '192.168.142.90/24'
       gateway: '192.168.142.1'
       script_post-up: ['ip route add 172.16.100.0/24 dev ens192 src 192.168.142.90 via 192.168.142.10']
+      aliases:
+        - address: '2a09:cd41:f:42ee::1'
+          gateway: '2a09:cd41:f:42ee::f'
+        - '2a09:cd41:f:42ee::1'
     bridge01:
       bridge_ports: ['ens193', 'ens194']
       script_down: ['/usr/local/sbin/random_script.sh']
@@ -151,6 +153,7 @@ There are also some useful **tags** available:
 
 ### Example
 
+#### Basic, Bond, Vlan
 
 **Config**
 ```yaml
@@ -230,4 +233,63 @@ guy@ansible:~# cat /proc/net/bonding/bond01
 > Link Failure Count: 0
 > Permanent HW addr: xx:xx:xx:xx:xx:xx
 > Slave queue ID: 0
+```
+
+#### IPv6 & Aliases
+
+**Config**
+```yaml
+network:
+  verification:
+    enable: true
+  interfaces:
+    eth0:
+      address: '10.0.85.90/24'
+      gateway: '10.0.85.1'
+      aliases:
+        - address: '2a09:cd41:f:42ee::1/124'
+          gateway: '2a09:cd41:f:42ee::f'
+        - '2a09:cd41:f:42ee::2'
+```
+
+**Result:**
+(_prettified_)
+```bash
+guy@ansible:~# ping -6 one.one.one.one -I 2a09:cd41:f:42ee::2
+> PING one.one.one.one(one.one.one.one (2606:4700:4700::1111)) from 2a09:cd41:f:42ee::2 : 56 data bytes
+> 64 bytes from one.one.one.one (2606:4700:4700::1111): icmp_seq=1 ttl=58 time=14.7 ms
+
+guy@ansible:~# ip a
+> 1: lo: <LOOPBACK,UP,LOWER_UP>
+> 2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+>     inet 10.0.85.90/24 brd 10.0.85.255 scope global eth0
+>     inet6 2a09:cd41:f:42ee::2/128 scope global deprecated 
+>     inet6 2a09:cd41:f:42ee::1/124 scope global deprecated 
+
+guy@ansible:~# cat /etc/network/interfaces.d/eth0
+> # Ansible managed
+> # ansibleguy.linux_networking
+> 
+> # for more config-details see: https://wiki.debian.org/NetworkConfiguration
+> 
+> auto eth0
+> allow-hotplug eth0
+> 
+> iface eth0 inet static
+>     address 194.32.76.202/24
+>     gateway 194.32.76.1
+>     dns-nameservers 8.8.8.8 1.1.1.1
+> 
+> # Interface aliases (additional ips)
+> auto eth0:1
+> allow-hotplug eth0:1
+> iface eth0:1 inet6 static
+>     address 2a09:cd41:f:42ee::1/124
+>     gateway 2a09:cd41:f:42ee::f
+> 
+> auto eth0:2
+> allow-hotplug eth0:2
+> iface eth0:2 inet6 static
+>     address 2a09:cd41:f:42ee::2
+
 ```

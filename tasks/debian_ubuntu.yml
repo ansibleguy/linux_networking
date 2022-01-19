@@ -113,6 +113,17 @@
   when: NW.support.traffic_forwarding
   tags: routing
 
+- name: Network | Debian-Based | Configuring sysctl to enable ipv6
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_set: yes
+    state: present
+    reload: yes
+  with_dict: "{{ NW_HC.sysctl.ipv6.enable }}"
+  when: NW.support.ipv6
+  tags: [routing, interfaces]
+
 - name: Network | Debian-Based | Configuring sysctl to disable ipv6
   ansible.posix.sysctl:
     name: "{{ item.key }}"
@@ -120,7 +131,7 @@
     sysctl_set: yes
     state: present
     reload: yes
-  with_dict: "{{ NW_HC.sysctl.disable_ipv6 }}"
+  with_dict: "{{ NW_HC.sysctl.ipv6.disable }}"
   when: not NW.support.ipv6
   tags: [routing, interfaces]
 

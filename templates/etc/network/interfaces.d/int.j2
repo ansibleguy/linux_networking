@@ -4,31 +4,28 @@
 # for more config-details see: https://wiki.debian.org/NetworkConfiguration
 
 {# Basic interface config #}
-{% if iface.auto | default(default_interface_config.auto) %}
+{% if iface.auto %}
 auto {{ name }}
 {% else %}
 allow {{ name }}
 {% endif %}
-{% if iface.hotplug | default(default_interface_config.hotplug) %}
+{% if iface.hotplug %}
 allow-hotplug {{ name }}
 {% endif %}
 
-iface {{ name }} {% if 'family' in iface %}{{ iface.family}}{% else %}{% if iface.ipv | default(default_interface_config.ipv) | int == 4 %}inet{% else %}inet6{% endif %}{% endif %} {% if iface.method | default(default_interface_config.method) == 'static' and 'address' not in iface %}manual{% else %}{{ iface.method | default(default_interface_config.method) }}{% endif %}
+iface {{ name }} {% if iface.address | ansible.netcommon.ipv6 %}inet6{% else %}inet{% endif %} {% if iface.method == 'static' and 'address' not in iface %}manual{% else %}{{ iface.method }}{% endif %}
 
-{% for setting in ['address', 'gateway', 'dns_search', 'mtu'] %}
+{% for setting in ['address', 'netmask', 'gateway', 'dns_search', 'mtu'] %}
 {%   if setting in iface %}
     {{ setting }} {{ iface[setting] }}
-
 {%   endif %}
 {% endfor %}
-
 {% if 'gateway' in iface %}
-    dns-nameservers {{ iface.nameservers | default(default_interface_config.nameservers) | join(' ') }}
+    dns-nameservers {{ iface.nameservers | join(' ') }}
 {% endif %}
 
 {# Additional interface settings #}
-
-{% if iface.vlan | default(default_interface_config.vlan) %}
+{% if iface.vlan %}
     # vlan settings
     #  get the current bond-status via: 'cat /proc/net/vlan/{{ name }}'
 {%   if name.find('.') == -1 %}
@@ -37,25 +34,25 @@ iface {{ name }} {% if 'family' in iface %}{{ iface.family}}{% else %}{% if ifac
 {% endif %}
 
 {# More subnets #}
-{% for subnet in iface.subnets | default(default_interface_config.subnets) %}
+{% for subnet in iface.subnets %}
     up /sbin/ip addr add {{ subnet }} dev {{ name }}
     down /sbin/ip addr del {{ subnet }} dev {{ name }}
 
 {% endfor %}
 
-    # up/down hook scripts
 {% for setting, value in iface.items() %}
 {%   if setting.startswith('script_') %}
     # {{ setting | replace('script_', '') }} scripts
 
 {%     for item in iface[setting] %}
     {{ setting | replace('script_', '') }} {{ item }}
-
 {%     endfor %}
 {%   endif %}
 {% endfor %}
 
+{% if 'bridge_ports' in iface or 'bond-mode' in iface %}
     # custom interface types
+{% endif %}
 {% if 'bridge_ports' in iface %}
     # bridge settings
 {%   for port in iface.bridge_ports[0]%}
@@ -79,14 +76,13 @@ iface {{ name }} {% if 'family' in iface %}{{ iface.family}}{% else %}{% if ifac
 
 {%   for setting, value in iface.items() %}
 {%     if setting.startswith('bridge_') %}
-{%       if setting != 'bridge_stp' or iface.switching | default(default_interface_config.switching) %}
+{%       if setting != 'bridge_stp' or iface.switching %}
     {{ setting }} {{ value }}
-
 {%       endif %}
 {%     endif %}
 {%   endfor %}
 
-{%   if not iface.switching | default(default_interface_config.switching) %}
+{%   if not iface.switching %}
     # to disable mac-learning
     up /usr/sbin/brctl setageing {{ name }} 0
     up /usr/sbin/brctl stp {{ name }} off
@@ -142,3 +138,27 @@ iface {{ slave }} inet manual
     # bond-mode '{{ iface['bond-mode'] }}' is unsupported! Supported modes: '{{ NW_HC.bonding_modes }}'
 
 {% endif %}
+
+{# Additional ips #}
+{% if iface.aliases | length > 0 %}
+# Interface aliases (additional ips)
+{% endif %}
+{% for _alias in iface.aliases %}
+{%   set alias = _alias | ensure_dict('address') %}{# if only ip got supplied => we format it as dict #}
+{%   if alias.auto | default(iface.auto) %}
+auto {{ name }}:{{ loop.index }}
+{%   else %}
+allow {{ name }}:{{ loop.index }}
+{%   endif %}
+{%   if alias.hotplug | default(iface.hotplug) %}
+allow-hotplug {{ name }}:{{ loop.index }}
+{%   endif %}
+iface {{ name }}:{{ loop.index }} {% if alias.address | ansible.netcommon.ipv6 %}inet6{% else %}inet{% endif %} {% if alias.method | default(iface.method) == 'static' and 'address' not in alias %}manual{% else %}{{ alias.method | default(iface.method) }}{% endif %}
+
+{% for setting in ['address', 'netmask', 'gateway', 'dns_search', 'mtu'] %}
+{%   if setting in alias %}
+    {{ setting }} {{ alias[setting] }}
+{%   endif %}
+{% endfor %}
+
+{% endfor %}
