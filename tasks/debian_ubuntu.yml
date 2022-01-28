@@ -109,7 +109,18 @@
     sysctl_set: yes
     state: present
     reload: yes
-  with_dict: "{{ NW_HC.sysctl.traffic_forwarding }}"
+  with_dict: "{{ NW_HC.sysctl.forwarding.enable }}"
+  when: NW.support.traffic_forwarding
+  tags: routing
+
+- name: Network | Debian-Based | Configuring sysctl to dis-allow traffic forwarding
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_set: yes
+    state: present
+    reload: yes
+  with_dict: "{{ NW_HC.sysctl.forwarding.disable }}"
   when: NW.support.traffic_forwarding
   tags: routing
 
