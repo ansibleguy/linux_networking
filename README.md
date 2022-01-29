@@ -50,10 +50,14 @@ Ansible Role to deploy network configuration/interfaces on linux servers.
 * **Warning:** Not every setting/variable you provide will be checked for validity. Bad config might break the role!
 
 
-## Requirements
+## Setup
 
-* Python 'netaddr' module on the controller.
-* Community and posix collection: ```ansible-galaxy install -r requirements.yml```
+For this role to work - you must install its dependencies first:
+
+```
+pip install netaddr
+ansible-galaxy install -r requirements.yml
+```
 
 ## Usage
 
