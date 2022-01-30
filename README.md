@@ -52,7 +52,7 @@ Ansible Role to deploy network configuration/interfaces on linux servers.
 
 ## Setup
 
-For this role to work - you must install its dependencies first:
+For this role to work - you must install its dependencies first: (*on the controller*)
 
 ```
 pip install netaddr
