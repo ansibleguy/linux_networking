@@ -4,7 +4,7 @@
 
 - hosts: all
   become: true
-#  vars:
-#    the network config needs to be set in the inventory hosts
+  #  vars:
+  #    the network config needs to be set in the inventory hosts
   roles:
   - ansibleguy.linux_networking

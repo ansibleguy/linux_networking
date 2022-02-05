@@ -19,7 +19,8 @@
     path: "{{ file }}"
     state: absent
 
-- name: "Network | Debian  | Interface | Purge | {{ iface_name }} | Removing interface from running-config"  # is necessary for vlan interfaces and so on
+- name: "Network | Debian  | Interface | Purge | {{ iface_name }} | Removing interface from running-config"
+  # is necessary for vlan interfaces and so on
   ansible.builtin.shell: "ip addr flush {{ iface_name }} & ifdown {{ iface_name }} & udevadm settle & ip link delete {{ iface_name }}"
   ignore_errors: true
   when: "':' not in iface_name"  # else it will kill the main iface when an alias should get deleted..

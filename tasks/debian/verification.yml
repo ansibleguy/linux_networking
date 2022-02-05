@@ -29,6 +29,8 @@
   ignore_errors: true
   timeout: 15
 
+# todo: if networking.service fails to restart it will not display an error (?); keeps old config
+
 - name: Network | Debian | NW-Verifier | Updating ip used in this execution
   ansible.builtin.set_fact:
     ansible_host: "{{ post_apply_ip }}"

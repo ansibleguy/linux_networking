@@ -32,7 +32,8 @@
   ansible.builtin.copy:
     src: "{{ NW_HC.network_script_dir }}/{{ startup_script }}"
     remote_src: true
-    dest: "{{ NW_HC.network_script_dir }}/backup/{{ NW_HC.network_script_dir | replace('/', NW_HC.verification.backup_path_separator) }}{{ NW_HC.verification.backup_path_separator }}{{ startup_script }}"
+    dest: "{{ NW_HC.network_script_dir }}/backup/{{ NW_HC.network_script_dir
+    | replace('/', NW_HC.verification.backup_path_separator) }}{{ NW_HC.verification.backup_path_separator }}{{ startup_script }}"
     owner: 'root'
     group: 'root'
     mode: 0755
@@ -49,7 +50,7 @@
     group: 'root'
     mode: 0755
   when: >
-    not NW.verification.enable or 
+    not NW.verification.enable or
     copy_startup_script.changed
 
 - name: Network | Debian | Startup | Copying service files
