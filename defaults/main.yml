@@ -17,6 +17,7 @@ default_network:
     - 'iftop'
     - 'net-tools'
     - 'dnsutils'
+    - 'iproute2'
 
   interfaces: {}
   purge_orphaned_interfaces: true
