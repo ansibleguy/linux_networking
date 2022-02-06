@@ -5,7 +5,8 @@
     name: 'networking.service'
     state: restarted
   ignore_errors: true
-  timeout: 15
+  async: 15
+  poll: 3
 
 - name: Network | Debian | Apply | Updating ip used in this execution
   ansible.builtin.set_fact:

@@ -116,9 +116,7 @@ NW_HC:
     backup_path_separator: '___'
     log_output_lines: 7
     service: 'ansibleguy.linux_networking.activate_network.service'
-    packages:
-      - 'fping'
-      - 'netcat'
+    packages: ['systemd', 'fping', 'netcat']
   sysctl:
     forwarding:
       enable:

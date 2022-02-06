@@ -21,13 +21,16 @@
     group: 'root'
     mode: 0644
 
+# todo: task will get stuck if ip changes (?)
+
 - name: Network | Debian | NW-Verifier | Starting verification service
   ansible.builtin.systemd:
     daemon_reload: yes
     name: "{{ NW_HC.verification.service }}"
     state: started
   ignore_errors: true
-  timeout: 15
+  async: 15
+  poll: 3
 
 # todo: if networking.service fails to restart it will not display an error (?); keeps old config
 
