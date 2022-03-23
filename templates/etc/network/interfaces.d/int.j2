@@ -26,139 +26,22 @@ iface {{ name }} {% if iface.address | ansible.netcommon.ipv6 %}inet6{% else %}i
 
 {# Additional interface settings #}
 {% if iface.vlan %}
-    # vlan settings
-    #  get the current bond-status via: 'cat /proc/net/vlan/{{ name }}'
-{%   if name.find('.') == -1 %}
-    vlan-raw-device {{ iface.vlan-raw-device }}  # if the int is a vlan but is not written in the INT.VID syntax - we'll need to define the parent-interface
-{%   endif %}
+{%   include "inc/vlan.j2" %}
 {% endif %}
 
-{# More subnets #}
-{% for subnet in iface.subnets %}
-    up /sbin/ip addr add {{ subnet }} dev {{ name }}
-    down /sbin/ip addr del {{ subnet }} dev {{ name }}
-
-{% endfor %}
-
-{% for setting, value in iface.items() %}
-{%   if setting.startswith('script_') %}
-    # {{ setting | replace('script_', '') }} scripts
-
-{%     for item in iface[setting] %}
-    {{ setting | replace('script_', '') }} {{ item }}
-{%     endfor %}
-{%   endif %}
-{% endfor %}
+{% include "inc/script.j2" %}
 
 {% if 'bridge_ports' in iface or 'bond-mode' in iface %}
     # custom interface types
 {% endif %}
 {% if 'bridge_ports' in iface %}
-    # bridge settings
-{%   for port in iface.bridge_ports[0]%}
-{%     if port|length > 1 %}  # if bridge_ports is a list and not a string..
-    bridge_ports {{ iface.bridge_ports | join(' ') }}
-
-{%     else %}
-    bridge_ports {{ iface.bridge_ports}}
-
-{%     endif %}
-{%   endfor %}
-
-    # bridge up-scripts
-{%   if 'address' not in iface %}
-    up /usr/sbin/brctl stp {{ name }} off
-    # to bring bridge up without address
-    up /usr/sbin/brctl setageing {{ name }} 0
-{%   else %}
-    up /usr/sbin/brctl stp {{ name }} on
-{%   endif %}
-
-{%   for setting, value in iface.items() %}
-{%     if setting.startswith('bridge_') %}
-{%       if setting != 'bridge_stp' or iface.switching %}
-    {{ setting }} {{ value }}
-{%       endif %}
-{%     endif %}
-{%   endfor %}
-
-{%   if not iface.switching %}
-    # to disable mac-learning
-    up /usr/sbin/brctl setageing {{ name }} 0
-    up /usr/sbin/brctl stp {{ name }} off
-{%   endif %}
-
+{%   include "inc/bridge.j2" %}
 {% endif %}
 
 {% if 'bond-mode' in iface and iface['bond-mode'] in NW_HC.bonding_modes %}
-
-  # bonding settings
-    # get the current bond-status via: 'cat /proc/net/bonding/{{ name }}'
-    bond-mode {{ iface['bond-mode'] }}
-    bond-slaves {% for slave in iface['bond-slaves'] %}{{ slave }} {% endfor %}
-
-{%   if iface['bond-mode'] in ['active-backup', 1, '1'] and 'bond-primary' not in iface %}
-    bond-primary {% for slave in iface['bond-slaves'] %}{{ slave }} {% endfor %}
-
-{%   endif %}
-{%   if iface['bond-mode'] in ['802.3ad', 'lacp', 4, '4'] and 'bond-lacp-rate' not in iface %}
-    bond-lacp-rate 1  # lacp fast-mode
-
-{%   endif %}
-
-    # pull slave interfaces up
-{% for slave in iface['bond-slaves'] %}
-    post-up ifup {{ slave }}
-{%   endfor %}
-
-    # additional bonding-settings
-    # defaults
-{%   for setting, value in default_interface_config.bonding.items() %}
-{%     if setting not in iface %}
-    {{ setting }} {{ value }}
-{%     endif %}
-{%   endfor %}
-
-    # custom
-{%   for setting, value in iface.items() %}
-{%     if setting.startswith('bond-') and setting not in ['bond-mode', 'bond-master', 'bond-slaves'] %}
-    {{ setting }} {{ value }}
-{%     endif %}
-{%   endfor %}
-
-# bonding-slave interfaces
-{%   for slave in iface['bond-slaves'] %}
-allow {{ slave }}
-iface {{ slave }} inet manual
-
-{%   endfor %}
-
+{%   include "inc/bond.j2" %}
 {% elif 'bond-mode' in iface and iface['bond-mode'] not in NW_HC.bonding_modes %}
-
     # bond-mode '{{ iface['bond-mode'] }}' is unsupported! Supported modes: '{{ NW_HC.bonding_modes }}'
-
 {% endif %}
 
-{# Additional ips #}
-{% if iface.aliases | length > 0 %}
-# Interface aliases (additional ips)
-{% endif %}
-{% for _alias in iface.aliases %}
-{%   set alias = _alias | ensure_dict('address') %}{# if only ip got supplied => we format it as dict #}
-{%   if alias.auto | default(iface.auto) %}
-auto {{ name }}:{{ loop.index }}
-{%   else %}
-allow {{ name }}:{{ loop.index }}
-{%   endif %}
-{%   if alias.hotplug | default(iface.hotplug) %}
-allow-hotplug {{ name }}:{{ loop.index }}
-{%   endif %}
-iface {{ name }}:{{ loop.index }} {% if alias.address | ansible.netcommon.ipv6 %}inet6{% else %}inet{% endif %} {% if alias.method | default(iface.method) == 'static' and 'address' not in alias %}manual{% else %}{{ alias.method | default(iface.method) }}{% endif %}
-
-{% for setting in ['address', 'netmask', 'gateway', 'dns_search', 'mtu'] %}
-{%   if setting in alias %}
-    {{ setting }} {{ alias[setting] }}
-{%   endif %}
-{% endfor %}
-
-{% endfor %}
+{% include "inc/alias.j2" %}

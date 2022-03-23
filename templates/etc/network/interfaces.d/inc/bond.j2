@@ -1,0 +1,41 @@
+  # bonding settings
+    # get the current bond-status via: 'cat /proc/net/bonding/{{ name }}'
+    bond-mode {{ iface['bond-mode'] }}
+    bond-slaves {% for slave in iface['bond-slaves'] %}{{ slave }} {% endfor %}
+
+{% if iface['bond-mode'] in ['active-backup', 1, '1'] and 'bond-primary' not in iface %}
+    bond-primary {% for slave in iface['bond-slaves'] %}{{ slave }} {% endfor %}
+
+{% endif %}
+{%   if iface['bond-mode'] in ['802.3ad', 'lacp', 4, '4'] and 'bond-lacp-rate' not in iface %}
+    bond-lacp-rate 1  # lacp fast-mode
+
+{% endif %}
+
+    # pull slave interfaces up
+{% for slave in iface['bond-slaves'] %}
+    post-up ifup {{ slave }}
+{% endfor %}
+
+    # additional bonding-settings
+    # defaults
+{% for setting, value in default_interface_config.bonding.items() %}
+{%   if setting not in iface %}
+    {{ setting }} {{ value }}
+{%   endif %}
+{% endfor %}
+
+    # custom
+{% for setting, value in iface.items() %}
+{%   if setting.startswith('bond-') and setting not in ['bond-mode', 'bond-master', 'bond-slaves'] %}
+    {{ setting }} {{ value }}
+{%   endif %}
+{% endfor %}
+
+# bonding-slave interfaces
+{% for slave in iface['bond-slaves'] %}
+allow {{ slave }}
+iface {{ slave }} inet manual
+
+{% endfor %}
+

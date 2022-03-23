@@ -1,0 +1,16 @@
+{# More subnets #}
+{% for subnet in iface.subnets %}
+    up /sbin/ip addr add {{ subnet }} dev {{ name }}
+    down /sbin/ip addr del {{ subnet }} dev {{ name }}
+
+{% endfor %}
+
+{% for setting, value in iface.items() %}
+{%   if setting.startswith('script_') %}
+    # {{ setting | replace('script_', '') }} scripts
+
+{%     for item in iface[setting] %}
+    {{ setting | replace('script_', '') }} {{ item }}
+{%     endfor %}
+{%   endif %}
+{% endfor %}

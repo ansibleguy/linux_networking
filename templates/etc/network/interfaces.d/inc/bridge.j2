@@ -1,0 +1,33 @@
+    # bridge settings
+{% for port in iface.bridge_ports[0]%}
+{%   if port|length > 1 %}  # if bridge_ports is a list and not a string..
+    bridge_ports {{ iface.bridge_ports | join(' ') }}
+
+{%   else %}
+    bridge_ports {{ iface.bridge_ports}}
+
+{%   endif %}
+{% endfor %}
+
+    # bridge up-scripts
+{% if 'address' not in iface %}
+    up /usr/sbin/brctl stp {{ name }} off
+    # to bring bridge up without address
+    up /usr/sbin/brctl setageing {{ name }} 0
+{% else %}
+    up /usr/sbin/brctl stp {{ name }} on
+{% endif %}
+
+{% for setting, value in iface.items() %}
+{%   if setting.startswith('bridge_') %}
+{%     if setting != 'bridge_stp' or iface.switching %}
+    {{ setting }} {{ value }}
+{%     endif %}
+{%   endif %}
+{% endfor %}
+
+{% if not iface.switching %}
+    # to disable mac-learning
+    up /usr/sbin/brctl setageing {{ name }} 0
+    up /usr/sbin/brctl stp {{ name }} off
+{% endif %}

@@ -1,0 +1,23 @@
+{# Additional ips #}
+{% if iface.aliases | length > 0 %}
+# Interface aliases (additional ips)
+{% endif %}
+{% for _alias in iface.aliases %}
+{%   set alias = _alias | ensure_dict('address') %}{# if only ip got supplied => we format it as dict #}
+{%   if alias.auto | default(iface.auto) %}
+auto {{ name }}:{{ loop.index }}
+{%   else %}
+allow {{ name }}:{{ loop.index }}
+{%   endif %}
+{%   if alias.hotplug | default(iface.hotplug) %}
+allow-hotplug {{ name }}:{{ loop.index }}
+{%   endif %}
+iface {{ name }}:{{ loop.index }} {% if alias.address | ansible.netcommon.ipv6 %}inet6{% else %}inet{% endif %} {% if alias.method | default(iface.method) == 'static' and 'address' not in alias %}manual{% else %}{{ alias.method | default(iface.method) }}{% endif %}
+
+{% for setting in ['address', 'netmask', 'gateway', 'dns_search', 'mtu'] %}
+{%   if setting in alias %}
+    {{ setting }} {{ alias[setting] }}
+{%   endif %}
+{% endfor %}
+
+{% endfor %}
