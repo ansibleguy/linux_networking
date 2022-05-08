@@ -148,13 +148,14 @@
   when: not NW.support.ipv6
   tags: [routing, interfaces]
 
+ # I can't seem to find a way to stop ansible from getting stuck when ip changes
 - name: Network | Debian-Based | Reloading network after prerequisit-changes
   ansible.builtin.systemd:
     name: 'networking.service'
     state: restarted
-  ignore_errors: true
-  async: 15
-  poll: 3
+    no_block: true
+  async: "{{ NW.reload_timeout }}"
+  poll: 2
   when: >
     (prerequisite_vlan_mod is defined and prerequisite_vlan_mod.changed) or
     (prerequisite_vlan_pkg is defined and prerequisite_vlan_pkg.changed) or

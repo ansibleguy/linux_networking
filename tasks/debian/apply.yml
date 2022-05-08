@@ -4,9 +4,10 @@
   ansible.builtin.systemd:
     name: 'networking.service'
     state: restarted
+    no_block: true
   ignore_errors: true
-  async: 15
-  poll: 3
+  async: "{{ NW.reload_timeout }}"
+  poll: 2
 
 - name: Network | Debian | Apply | Updating ip used in this execution
   ansible.builtin.set_fact:

@@ -26,6 +26,8 @@ default_network:
   # IF the ip address changes, and you want the execution to re-connect to the new one
   # post_apply_ip: '192.168.1.1'
 
+  reload_timeout: 5
+
   # network change-verification settings
   verification:
     enable: false
