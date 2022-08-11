@@ -1,10 +1,6 @@
 ---
 
-# dependencies
-#   controller:
-#     python-netaddr / python3-netaddr must be installed
-
-default_network:
+defaults_ne:
   support:
     vlan: false
     bridge: false
@@ -90,11 +86,11 @@ default_network:
     #    - 'ip route add 10.10.42.0/22 dev tunnel0'
     #    - 'ip route add 0.0.0.0 via 192.168.22.1 metric 200'
 
-NW: "{{ default_network | combine(network, recursive=true) }}"
+NW: "{{ defaults_ne | combine(network, recursive=true) }}"
 
 # network interface settings
 #   for more details see: https://wiki.debian.org/NetworkConfiguration
-default_interface_config:
+defaults_interfaceg:
   auto: true
   method: 'static'
   hotplug: true
@@ -109,38 +105,3 @@ default_interface_config:
   aliases: []  # creating alias-interfaces to add more ips to it
 #  - address: 'fe80::100/10'
 #    gateway: 'fe80::1'
-
-NW_HC:
-  # you shouldn't have a need to change these settings
-  network_script_dir: '/usr/local/sbin/ansibleguy.linux_networking'
-  network_apply_timeout: 30  # how long ansible will wait for a re-established ssh connection
-  verification:
-    script: 'activate_network.py'
-    backup_path_separator: '___'
-    log_output_lines: 7
-    service: 'ansibleguy.linux_networking.activate_network.service'
-    packages: ['systemd', 'fping', 'netcat']
-  sysctl:
-    forwarding:
-      enable:
-        'net.ipv4.ip_forward': 1
-        'net.ipv4.conf.all.arp_filter': 0
-        'net.ipv4.conf.all.rp_filter': 2
-      disable:
-        'net.ipv4.ip_forward': 0
-    ipv6:
-      disable:
-        'net.ipv6.conf.all.disable_ipv6': 1
-        'net.ipv6.conf.default.disable_ipv6': 1
-        'net.ipv6.conf.lo.disable_ipv6': 1
-      enable:
-        'net.ipv6.conf.all.disable_ipv6': 0
-        'net.ipv6.conf.default.disable_ipv6': 0
-        'net.ipv6.conf.lo.disable_ipv6': 0
-  bonding_modes: [
-    'balance-rr', 'active-backup', 'balance-xor', 'broadcast',
-    '802.3ad', 'balance-tlb', 'balance-alb',
-    0, 1, 2, 3, 4, 5, 6, '0', '1', '2', '3', '4', '5', '6', 'lacp'
-  ]
-
-  controller_required_mods: ['netaddr']

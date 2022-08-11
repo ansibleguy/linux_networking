@@ -33,7 +33,7 @@
     (iface.address is defined and iface.address|ansible.netcommon.ipaddr) or
     iface.method == 'dhcp'
   vars:
-    iface: "{{ default_interface_config | combine(iface_item.value, recursive=true) }}"
+    iface: "{{ defaults_interface | combine(iface_item.value, recursive=true) }}"
     name: "{{ iface_item.key }}"
     file: "/etc/network/interfaces.d/{{ name }}"
     copy_device_iface:
