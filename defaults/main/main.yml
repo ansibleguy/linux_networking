@@ -90,7 +90,7 @@ NW: "{{ defaults_ne | combine(network, recursive=true) }}"
 
 # network interface settings
 #   for more details see: https://wiki.debian.org/NetworkConfiguration
-defaults_interfaceg:
+defaults_interface:
   auto: true
   method: 'static'
   hotplug: true
