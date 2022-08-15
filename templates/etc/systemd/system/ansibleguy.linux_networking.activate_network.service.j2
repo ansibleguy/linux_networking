@@ -8,8 +8,13 @@ Documentation=https://github.com/ansibleguy/linux_networking
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/python3 {{ NW_HC.network_script_dir }}/{{ NW_HC.verification.script }}
+{% if ansible_distribution_version == '10' %}
+StandardOutput=syslog
+StandardError=syslog
+{% else %}
 StandardOutput=journal
 StandardError=journal
+{% endif %}
 SyslogIdentifier={{ NW.verification.syslog_id }}
 
 Environment="PYTHONUNBUFFERED=1"

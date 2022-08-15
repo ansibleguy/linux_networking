@@ -10,8 +10,13 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 ExecStart=/bin/bash {{ NW_HC.network_script_dir }}/{{ startup_script }}
+{% if ansible_distribution_version == '10' %}
+StandardOutput=syslog
+StandardError=syslog
+{% else %}
 StandardOutput=journal
 StandardError=journal
+{% endif %}
 SyslogIdentifier={{ startup_syslog_id }}
 RemainAfterExit=true
 
