@@ -65,7 +65,7 @@
   register: prerequisite_vlan_mod
 
 - name: Network | Debian-Based | Add the 802.1q module for vlan support (2/2)
-  command: "echo 8021q >> /etc/modules"
+  ansible.builtin.command: "echo 8021q >> /etc/modules"
   when: prerequisite_vlan_mod.changed
   tags: interfaces
 
@@ -170,7 +170,9 @@
   ignore_errors: true
 
 - name: Network | Debian-Based | Checking if ufw allows forwarded traffic
-  ansible.builtin.shell: 'cat /etc/default/ufw | grep FORWARD_POLICY | grep -c DROP'
+  ansible.builtin.shell: |
+    set -o pipefail
+    cat /etc/default/ufw | grep FORWARD_POLICY | grep -c DROP
   register: ufw_policy_forward
   when: NW.support.traffic_forwarding
   changed_when: false
