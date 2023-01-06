@@ -13,7 +13,7 @@ allow {{ name }}
 allow-hotplug {{ name }}
 {% endif %}
 
-iface {{ name }} {% if iface.address | ansible.netcommon.ipv6 %}inet6{% else %}inet{% endif %} {% if iface.method == 'static' and 'address' not in iface %}manual{% else %}{{ iface.method }}{% endif %}
+iface {{ name }} {% if iface.address | ansible.utils.ipv6 %}inet6{% else %}inet{% endif %} {% if iface.method == 'static' and 'address' not in iface %}manual{% else %}{{ iface.method }}{% endif %}
 
 {% for setting in ['address', 'netmask', 'gateway', 'dns_search', 'mtu'] %}
 {%   if setting in iface %}

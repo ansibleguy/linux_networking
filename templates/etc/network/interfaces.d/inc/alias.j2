@@ -12,7 +12,7 @@ allow {{ name }}:{{ loop.index }}
 {%   if alias.hotplug | default(iface.hotplug) %}
 allow-hotplug {{ name }}:{{ loop.index }}
 {%   endif %}
-iface {{ name }}:{{ loop.index }} {% if alias.address | ansible.netcommon.ipv6 %}inet6{% else %}inet{% endif %} {% if alias.method | default(iface.method) == 'static' and 'address' not in alias %}manual{% else %}{{ alias.method | default(iface.method) }}{% endif %}
+iface {{ name }}:{{ loop.index }} {% if alias.address | ansible.utils.ipv6 %}inet6{% else %}inet{% endif %} {% if alias.method | default(iface.method) == 'static' and 'address' not in alias %}manual{% else %}{{ alias.method | default(iface.method) }}{% endif %}
 
 {% for setting in ['address', 'netmask', 'gateway', 'dns_search', 'mtu'] %}
 {%   if setting in alias %}

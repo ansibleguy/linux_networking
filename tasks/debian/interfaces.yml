@@ -30,7 +30,7 @@
 - name: Network | Debian | Interfaces | Configuring network interfaces
   ansible.builtin.include_tasks: interface-device.yml
   when: >
-    (iface.address is defined and iface.address|ansible.netcommon.ipaddr) or
+    (iface.address is defined and iface.address | ansible.utils.ipaddr) or
     iface.method == 'dhcp'
   vars:
     iface: "{{ defaults_interface | combine(iface_item.value, recursive=true) }}"

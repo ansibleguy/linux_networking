@@ -173,6 +173,8 @@
   ansible.builtin.shell: |
     set -o pipefail
     cat /etc/default/ufw | grep FORWARD_POLICY | grep -c DROP
+  args:
+    executable: '/bin/bash'
   register: ufw_policy_forward
   when: NW.support.traffic_forwarding
   changed_when: false
