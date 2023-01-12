@@ -11,6 +11,19 @@ Ansible Role to deploy network configuration/interfaces on linux servers.
 **Tested:**
 * Debian 11
 
+## Install
+
+```bash
+ansible-galaxy install ansibleguy.linux_networking
+
+# or to custom role-path
+ansible-galaxy install ansibleguy.linux_networking --roles-path ./roles
+
+# install dependencies
+pip install netaddr
+ansible-galaxy install -r requirements.yml
+```
+
 ## Functionality
 
 * **Network interfaces**
@@ -56,15 +69,6 @@ Ansible Role to deploy network configuration/interfaces on linux servers.
 
 * **Warning:** Not every setting/variable you provide will be checked for validity. Bad config might break the role!
 
-
-## Setup
-
-For this role to work - you must install its dependencies first: (*on the controller*)
-
-```
-pip install netaddr
-ansible-galaxy install -r requirements.yml
-```
 
 ## Usage
 
