@@ -2,9 +2,9 @@
 
 Ansible Role to deploy network configuration/interfaces on linux servers. 
 
-[![Molecule Test Status](https://badges.ansibleguy.net/linux_networking.molecule.svg)](https://molecule.readthedocs.io/en/latest/)
-[![YamlLint Test Status](https://badges.ansibleguy.net/linux_networking.yamllint.svg)](https://yamllint.readthedocs.io/en/stable/)
-[![Ansible-Lint Test Status](https://badges.ansibleguy.net/linux_networking.ansiblelint.svg)](https://ansible-lint.readthedocs.io/en/latest/)
+[![Molecule Test Status](https://badges.ansibleguy.net/linux_networking.molecule.svg)](https://github.com/ansibleguy/_meta_cicd/blob/latest/templates/usr/local/bin/cicd/molecule.sh.j2)
+[![YamlLint Test Status](https://badges.ansibleguy.net/linux_networking.yamllint.svg)](https://github.com/ansibleguy/_meta_cicd/blob/latest/templates/usr/local/bin/cicd/yamllint.sh.j2)
+[![Ansible-Lint Test Status](https://badges.ansibleguy.net/linux_networking.ansiblelint.svg)](https://github.com/ansibleguy/_meta_cicd/blob/latest/templates/usr/local/bin/cicd/ansiblelint.sh.j2)
 [![Ansible Galaxy](https://img.shields.io/ansible/role/56762)](https://galaxy.ansible.com/ansibleguy/linux_networking)
 [![Ansible Galaxy Downloads](https://img.shields.io/badge/dynamic/json?color=blueviolet&label=Galaxy%20Downloads&query=%24.download_count&url=https%3A%2F%2Fgalaxy.ansible.com%2Fapi%2Fv1%2Froles%2F56762%2F%3Fformat%3Djson)](https://galaxy.ansible.com/ansibleguy/linux_networking)
 
