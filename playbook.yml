@@ -7,4 +7,4 @@
   #  vars:
   #    the network config needs to be set in the inventory hosts
   roles:
-  - ansibleguy.linux_networking
+    - ansibleguy.linux_networking
