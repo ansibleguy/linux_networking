@@ -7,7 +7,7 @@ class FilterModule(object):
 
     @staticmethod
     def ensure_dict(data: (str, dict), key: str) -> dict:
-        if type(data) != dict:
+        if not isinstance(data, dict):
             return {key: data}
 
         return data
