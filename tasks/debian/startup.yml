@@ -33,12 +33,12 @@
     src: "{{ NW_HC.network_script_dir }}/{{ startup_script }}"
     remote_src: true
     dest: "{{ NW_HC.network_script_dir }}/backup/{{ NW_HC.network_script_dir
-    | replace('/', NW_HC.verification.backup_path_separator) }}{{ NW_HC.verification.backup_path_separator }}{{ startup_script }}"
+    | replace('/', NW_HC.validation.backup_path_separator) }}{{ NW_HC.validation.backup_path_separator }}{{ startup_script }}"
     owner: 'root'
     group: 'root'
     mode: 0755
   when:
-    - NW.verification.enable
+    - NW.validation.enable
     - copy_startup_script_file.stat.exists
     - copy_startup_script.changed
 
@@ -50,7 +50,7 @@
     group: 'root'
     mode: 0755
   when: >
-    not NW.verification.enable or
+    not NW.validation.enable or
     copy_startup_script.changed
 
 - name: Network | Debian | Startup | Copying service files

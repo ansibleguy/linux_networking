@@ -4,12 +4,12 @@ NW_HC:
   # you shouldn't have a need to change these settings
   network_script_dir: '/usr/local/sbin/ansibleguy.linux_networking'
   network_apply_timeout: 30  # how long ansible will wait for a re-established ssh connection
-  verification:
+  validation:
     script: 'activate_network.py'
     backup_path_separator: '___'
     log_output_lines: 7
     service: 'ansibleguy.linux_networking.activate_network.service'
-    packages: ['systemd', 'fping', 'netcat']
+    packages: ['systemd', 'fping', 'python3']
   sysctl:
     forwarding:
       enable:

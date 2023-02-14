@@ -7,26 +7,28 @@ from json import loads as json_loads
 from os import system as os_system
 from os import listdir as os_listdir
 from shutil import copyfile
-import logging
+from socket import socket, AF_INET, SOCK_STREAM
 import logging.handlers
 from sys import exit as sys_exit
 from time import sleep
 
-VERIFICATION = json_loads('{{ NW.verification | to_json }}')
-TESTS = json_loads('{{ NW.verification.tests | to_json }}')
-BACKUP_PATH = f'{{ NW_HC.network_script_dir }}/backup'
-BACKUP_PATH_SEPARATOR = '{{ NW_HC.verification.backup_path_separator }}'
+VALIDATION = json_loads('{{ NW.validation | to_json }}')
+BACKUP_PATH = '{{ NW_HC.network_script_dir }}/backup'
+BACKUP_PATH_SEPARATOR = '{{ NW_HC.validation.backup_path_separator }}'
 
-{% raw %}
+TIMEOUT = VALIDATION['test_timeout']
+PING_COUNT = 2
+PING_TIMEOUT = (TIMEOUT / PING_COUNT) * 1000
+
 # initializing syslog logger
-syslog = logging.getLogger(VERIFICATION['syslog_id'])
+syslog = logging.getLogger(VALIDATION['syslog_id'])
 syslog.setLevel(logging.INFO)
-handler =  logging.handlers.SysLogHandler(address='/dev/log')
+handler = logging.handlers.SysLogHandler(address='/dev/log')
 syslog.addHandler(handler)
 
 
-def log(msg: str, level: int = 3):
-    if VERIFICATION['logging']:
+def _log(msg: str, level: int = 3):
+    if VALIDATION['logging']:
         if level == 1:
             syslog.error(msg)
 
@@ -37,133 +39,137 @@ def log(msg: str, level: int = 3):
             syslog.info(msg)
 
 
-def error(msg):
-    log(f"Encountered the following error: '{msg}'", level=1)
+def _error(msg):
+    _log(f"Encountered the following error: '{msg}'", level=1)
     sys_exit(1)
 
 
-class Verification:
-    # class to verify the network-connectivity of this host
+def _parse_result(exit_code: int, test_type: str, test_name: str, test_target: (str, dict)) -> bool:
+    msg = f"Test {test_type} '{test_name}' targeting \"{test_target}\""
 
-    def __init__(self):
-        self.ping_count = 2
-        self.timeout = VERIFICATION['test_timeout']
-        self.ping_timeout = (self.timeout / self.ping_count) * 1000
+    if exit_code == 0:
+        _log(f'{msg} succeeded')
+        return True
 
-    def do(self) -> bool:
-        try_count = 0
-        while try_count < VERIFICATION['retries']:
-            try_count += 1
+    _log(f'{msg} failed', level=2)
+    return False
 
-            results = self._get_results()
 
-            if all(results):
-                break  # if checks are OK - we have no need to re-check them
+def _ping(target: str) -> int:
+    return os_system(f'fping -c {PING_COUNT} -t {PING_TIMEOUT} {target} > /dev/null 2>&1')
 
-            sleep(VERIFICATION['retry_wait'])
 
-        return all(results)
+def _port(target: dict) -> int:
+    with socket(AF_INET, SOCK_STREAM) as s:
+        s.settimeout(TIMEOUT)
+        return s.connect_ex((target['host'], target['port']))
 
-    def _get_results(self) -> list:
-        results = []
 
-        for test_type, test_config in TESTS.items():
-            if not all(results):
-                return results  # if a check failed - we have no need to run further checks
+def _get_results() -> list:
+    results = []
 
-            elif test_type == 'ping':
-                for test_name, test_target in test_config.items():
-                    results.append(
-                        self._parse_result(
-                            exit_code=self._ping(
-                                target=test_target,
-                            ),
-                            test_type=test_type,
-                            test_name=test_name,
-                            test_target=test_target,
-                        )
+    for test_type, test_config in VALIDATION['test'].items():
+        if not all(results):
+            return results  # if a check failed - we have no need to run further checks
+
+        test_functions = dict(
+            ping=_ping,
+            port=_port,
+        )
+
+        if test_type in test_functions:
+            for test_name, test_target in test_config.items():
+                results.append(
+                    _parse_result(
+                        exit_code=test_functions[test_type](test_target),
+                        test_type=test_type,
+                        test_name=test_name,
+                        test_target=test_target,
                     )
+                )
 
-            elif test_type == 'netcat':
-                for test_name, test_target in test_config.items():
-                    results.append(
-                        self._parse_result(
-                            exit_code=self._netcat(
-                                target=test_target,
-                            ),
-                            test_type=test_type,
-                            test_name=test_name,
-                            test_target=f'{test_target.host}:{test_target.port}',
-                        )
-                    )
+        else:
+            _log(f"Provided unsupported test-type '{test_type}' via config! Ignoring it!", level=2)
 
-            else:
-                log("Provided unsupported test-type '{test_type}' via config! Ignoring it!", level=2)
-
-        return results
-
-    @staticmethod
-    def _parse_result(exit_code: int, test_type: str, test_name: str, test_target: str) -> bool:
-        if exit_code == 0:
-            log(f"Test {test_type} '{test_name}' to ip '{test_target}' succeeded")
-            return True
-
-        log(f"Test {test_type} '{test_name}' to ip '{test_target}' failed", level=2)
-        return False
-
-    def _ping(self, target: str) -> int:
-        return os_system(f'fping -c {self.ping_count} -t {self.ping_timeout} {target} > /dev/null 2>&1')
-
-    def _netcat(self, target: str) -> int:
-        return os_system(f'nc -w {self.timeout} -z {target.host} {target.port} > /dev/null 2>&1')
+    return results
 
 
 def restore_config():
-    os_system(f'cp -r /etc/network/interfaces* /tmp/')  # for troubleshooting purposes
+    os_system('cp -r /etc/network/interfaces* /tmp/')  # for troubleshooting purposes
     for config_backup in os_listdir(BACKUP_PATH):
         src = f"{BACKUP_PATH}/{config_backup}"
         dst = '/'.join(config_backup.split(BACKUP_PATH_SEPARATOR))
 
         copyfile(src=src, dst=dst)
-        log(f"Restored config-file '{dst}'", level=2)
+        _log(f"Restored config-file '{dst}'", level=2)
 
 
 def apply_config():
-    log("Applying new network config!", level=2)
+    _log("Applying new network config!", level=2)
     os_system('systemctl restart networking.service')
-    # todo: I think we need to "1. stop networking, 2. flush ip's and so on, 3. re-start networking" so it is a more 'clean' state
+    # todo: I think we need to "1. stop networking, 2. flush ip's and so on, 3. re-start networking"
+    #  so it is a 'cleaner' state
 
 
-# back-up old network config is done by the ansible role (when changed in check mode - copy to backup-dir before modifying)
+# back-up old network config is done by the ansible role
+#   (when changed in check mode - copy to backup-dir before modifying)
 
-Verify = Verification()
+def validate() -> bool:
+    try_count = 0
+    results = [True]
 
-# test connectivity via verification tests
-#   fail and notify user that the tests do not work
+    while try_count < VALIDATION['retries']:
+        try_count += 1
 
-if not Verify.do():
-    error('The verification process did not work BEFORE APPLYING CHANGES!\nYou NEED TO FIX your tests so the verification works properly!')
+        results = _get_results()
 
-# activate new network config
-apply_config()
+        if all(results):
+            break  # if checks are OK - we have no need to re-check them
 
-# test connectivity with new network-config via verification tests
-if not Verify.do():
-    # restore old config and re-activate it if the verification failed
-    log('Network tests did not succeed after applying the new network-config! We will now revert the changes and re-apply the old config!', level=1)
-    restore_config()
+        sleep(VALIDATION['retry_wait'])
+
+    return all(results)
+
+
+def main():
+    # test connectivity via validation tests
+    #   fail and notify user that the tests do not work
+
+    if not validate():
+        _error(
+            'The validation process did not work BEFORE APPLYING CHANGES!\n'
+            'You NEED TO FIX your tests so the validation works properly!'
+        )
+
+    # activate new network config
     apply_config()
 
-    if Verify.do():
-        log('The network-config restore was applied successfully!', level=2)
+    # test connectivity with new network-config via validation tests
+    if not validate():
+        # restore old config and re-activate it if the validation failed
+        _log(
+            'Network tests did not succeed after applying the new network-config! '
+            'We will now revert the changes and re-apply the old config!',
+            level=1
+        )
+        restore_config()
+        apply_config()
+
+        if validate():
+            _log('The network-config restore was applied successfully!', level=2)
+
+        else:
+            _log(
+                'The network-config restore seems to have failed! The Network tests did not succeed after the restore!',
+                level=1
+            )
+
+        _error('Validation of the network-changes did FAIL!')
 
     else:
-        log('The network-config restore seems to have failed! The Network tests did not succeed after the restore!', level=1)
+        _log('Network changes were applied successfully!')
+        sys_exit(0)
 
-    error('Verification of the network-changes did FAIL!')
 
-else:
-    log('Network changes were applied successfully!')
-    sys_exit(0)
-
-{% endraw %}
+if __name__ == '__main__':
+    main()

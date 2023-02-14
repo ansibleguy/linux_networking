@@ -48,7 +48,7 @@ ansible-galaxy install -r requirements.yml
 
 * **Default opt-out**:
   * network startup-service to allow specific configurations
-  * anti-lockout via network verification script
+  * anti-lockout via network-validation script
   * support for:
     * interface bonding
     * interface bridging
@@ -70,6 +70,8 @@ ansible-galaxy install -r requirements.yml
 
 * **Warning:** Not every setting/variable you provide will be checked for validity. Bad config might break the role!
 
+
+* **Note:** The network-validation port-check only supports TCP target-ports as UDP-connectivity cannot be verified that easily.
 
 ## Usage
 
@@ -122,14 +124,14 @@ network:
       bond-slaves: ['ens198', 'ens199']
       # bond-primary: 'ens198'  # if no primary is defined, it will be chosen automatically
 
-  verification:
+  validation:
     enable: true
     # tests to run when a network change is done
     #   if the tests fail; the changes of the current session will be restored
     tests:
       ping:
         google_dns: '8.8.8.8'
-      netcat:  # will test if the remote port is reachable
+      port:  # will test if the remote port is reachable (only TCP)
         internal_web:
           host: 'someSite.internal'
           port: 443
@@ -256,7 +258,7 @@ guy@ansible:~# cat /proc/net/bonding/bond01
 **Config**
 ```yaml
 network:
-  verification:
+  validation:
     enable: true
   interfaces:
     eth0:

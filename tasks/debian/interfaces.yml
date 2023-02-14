@@ -52,18 +52,18 @@
     mode: 0644
   check_mode: true
   register: copy_main_iface
-  when: NW.verification.enable
+  when: NW.validation.enable
 
 - name: Network | Debian | Interfaces | Backing-up current config if changed/exists
   ansible.builtin.copy:
     src: '/etc/network/interfaces'
     remote_src: true
-    dest: "{{ NW_HC.network_script_dir }}/backup/{{ '/etc/network/interfaces' | replace('/', NW_HC.verification.backup_path_separator) }}"
+    dest: "{{ NW_HC.network_script_dir }}/backup/{{ '/etc/network/interfaces' | replace('/', NW_HC.validation.backup_path_separator) }}"
     owner: 'root'
     group: 'root'
     mode: 0644
   when:
-    - NW.verification.enable
+    - NW.validation.enable
     - copy_main_iface.changed
 
 - name: Network | Debian  | Interfaces | Copying main interface file
@@ -74,5 +74,5 @@
     group: 'root'
     mode: 0644
   when: >
-    not NW.verification.enable or
+    not NW.validation.enable or
     copy_main_iface.changed

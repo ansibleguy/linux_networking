@@ -6,7 +6,7 @@
   register: iface_file_1
   changed_when: false
   check_mode: false
-  when: NW.verification.enable
+  when: NW.validation.enable
 
 - name: "Network | Debian  | Interface | {{ name }} | Checking if main interface file changed"
   ansible.builtin.template:
@@ -17,30 +17,30 @@
     mode: 0644
   check_mode: true
   register: iface_file_2
-  when: NW.verification.enable
+  when: NW.validation.enable
 
 - name: "Network | Debian  | Interface | {{ name }} | Backing-up current config if changed/exists"
   ansible.builtin.copy:
     src: "{{ file }}"
     remote_src: true
-    dest: "{{ NW_HC.network_script_dir }}/backup/{{ file | replace('/', NW_HC.verification.backup_path_separator) }}"
+    dest: "{{ NW_HC.network_script_dir }}/backup/{{ file | replace('/', NW_HC.validation.backup_path_separator) }}"
     owner: 'root'
     group: 'root'
     mode: 0644
   when:
-    - NW.verification.enable
+    - NW.validation.enable
     - iface_file_1.stat.exists
     - iface_file_2.changed
 
 - name: "Network | Debian  | Interface | {{ name }} | Backing-up empty file"
   ansible.builtin.file:
-    path: "{{ NW_HC.network_script_dir }}/backup/{{ file | replace('/', NW_HC.verification.backup_path_separator) }}"
+    path: "{{ NW_HC.network_script_dir }}/backup/{{ file | replace('/', NW_HC.validation.backup_path_separator) }}"
     state: touch
     owner: 'root'
     group: 'root'
     mode: 0644
   when:
-    - NW.verification.enable
+    - NW.validation.enable
     - not iface_file_1.stat.exists
     - iface_file_2.changed
 
@@ -52,5 +52,5 @@
     group: 'root'
     mode: 0644
   when: >
-    not NW.verification.enable or
+    not NW.validation.enable or
     iface_file_2.changed

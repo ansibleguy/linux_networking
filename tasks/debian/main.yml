@@ -14,12 +14,12 @@
     - NW.interfaces is defined
     - NW.interfaces | length > 0
 
-- name: Network | Debian | Applying network config via verifier
-  ansible.builtin.import_tasks: verification.yml
-  when: NW.verification.enable
+- name: Network | Debian | Applying network config via validator
+  ansible.builtin.import_tasks: validation.yml
+  when: NW.validation.enable
   tags: [routing, interfaces, base]
 
-- name: Network | Debian | Applying network config w/o verification
+- name: Network | Debian | Applying network config w/o validation
   ansible.builtin.import_tasks: apply.yml
-  when: not NW.verification.enable
+  when: not NW.validation.enable
   tags: [routing, interfaces, base]

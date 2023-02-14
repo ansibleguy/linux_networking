@@ -8,11 +8,11 @@
   ansible.builtin.copy:
     src: "{{ file }}"
     remote_src: true
-    dest: "{{ NW_HC.network_script_dir }}/backup/{{ file | replace('/', NW_HC.verification.backup_path_separator) }}"
+    dest: "{{ NW_HC.network_script_dir }}/backup/{{ file | replace('/', NW_HC.validation.backup_path_separator) }}"
     owner: 'root'
     group: 'root'
     mode: 0644
-  when: NW.verification.enable
+  when: NW.validation.enable
 
 - name: "Network | Debian  | Interface | Purge | {{ iface_name }} | Removing interface file"
   ansible.builtin.file:

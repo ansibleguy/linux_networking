@@ -23,22 +23,22 @@
     prompt: 'This role does currently not support the configuration of interfaces on ubuntu systems! Do you want to continue to run the basic tasks?'
   when: ansible_distribution|lower == 'ubuntu'
 
-- name: Network | Debian-Based | Remove old verifier config-backups
+- name: Network | Debian-Based | Remove old validator config-backups
   ansible.builtin.file:
     path: "{{ NW_HC.network_script_dir }}/backup"
     state: absent
-  when: NW.verification.enable
+  when: NW.validation.enable
   tags: [routing, interfaces, base]
   changed_when: false
 
-- name: Network | Debian-Based | Re-creating verifier backup-directory
+- name: Network | Debian-Based | Re-creating validator backup-directory
   ansible.builtin.file:
     path: "{{ NW_HC.network_script_dir }}/backup"
     owner: 'root'
     group: 'root'
     state: directory
     mode: 0755
-  when: NW.verification.enable
+  when: NW.validation.enable
   tags: [routing, interfaces, base]
   changed_when: false
 

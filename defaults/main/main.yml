@@ -24,11 +24,11 @@ defaults_ne:
 
   reload_timeout: 5
 
-  # network change-verification settings
-  verification:
+  # network change-validation settings
+  validation:
     enable: false
     # a python3 script (running as systemd service) will test your hosts network connectivity before and after network configuration-changes
-    # if the verification fails the network configuration will be restored to the old state
+    # if the validation fails the network configuration will be restored to the old state
     # this should help you to prevent locking yourself out of remote systems and troubleshooting config-errors
     #   (/etc/network/interfaces* will be copied to /tmp/ if an error occurs)
     # my inspiration for this feature comes from the handling by barracuda network-firewalls
@@ -43,7 +43,7 @@ defaults_ne:
       # you might need to modify the default rule if icmp-ping is blocked in the network
       ping:
         google_dns: '8.8.8.8'
-  #    netcat:  # will test if the remote port is reachable
+  #    port:  # will test if the remote port is reachable
   #      google_web:
   #        host: 'google.com'
   #        port: 443
