@@ -419,6 +419,7 @@ disable=raw-checker-failed,
         C0114, C0115, C0116,  # docstrings
         C0103,  # var naming
         R0205,  # filter_plugins 'FilterModule'
+        W0511,  # todos
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
