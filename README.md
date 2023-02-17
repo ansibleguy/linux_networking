@@ -57,8 +57,6 @@ ansible-galaxy install -r requirements.yml
 
 ## Info
 
-* **Note:** Dynamic routing is available using [THIS](https://github.com/ansibleguy/infra_dynamic_routing) role
-
 
 * **Note:** this role currently only supports debian systems (_ubuntu partly_)
 
