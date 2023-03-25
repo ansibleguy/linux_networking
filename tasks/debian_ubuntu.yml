@@ -65,7 +65,9 @@
   register: prerequisite_vlan_mod
 
 - name: Network | Debian-Based | Add the 802.1q module for vlan support (2/2)
-  ansible.builtin.command: "echo 8021q >> /etc/modules"
+  ansible.builtin.lineinfile:
+    path: '/etc/modules'
+    line: '8021q'
   when: prerequisite_vlan_mod.changed
   tags: interfaces
 
@@ -89,8 +91,11 @@
     - 'mii'
 
 - name: Network | Debian-Based | Add the bonding module for nic-teaming support (2/2)
-  ansible.builtin.command: "echo {{ item }} >> /etc/modules"
+  ansible.builtin.lineinfile:
+    path: '/etc/modules'
+    line: "{{ item }}"
   when: prerequisite_bonding_mod.changed
+  changed_when: false
   tags: interfaces
   loop:
     - 'bonding'

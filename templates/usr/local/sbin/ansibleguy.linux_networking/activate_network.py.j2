@@ -72,10 +72,7 @@ def _get_results() -> list:
         if not all(results):
             return results  # if a check failed - we have no need to run further checks
 
-        test_functions = dict(
-            ping=_ping,
-            port=_port,
-        )
+        test_functions = {'ping': _ping, 'port': _port}
 
         if test_type in test_functions:
             for test_name, test_target in test_config.items():
