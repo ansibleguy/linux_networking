@@ -1,0 +1,3 @@
+---
+
+NW: "{{ defaults_ne | combine(network, recursive=true) }}"
