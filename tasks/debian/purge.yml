@@ -1,10 +1,10 @@
 ---
 
-- name: "Network | Debian  | Interface | Purge | {{ iface_name }} | Setting vars"
+- name: "Network  | Interface | Purge | {{ iface_name }} | Setting vars"
   ansible.builtin.set_fact:
     file: "/etc/network/interfaces.d/{{ iface_name }}"
 
-- name: "Network | Debian  | Interface | Purge | {{ iface_name }} | Backing-up current config"
+- name: "Network  | Interface | Purge | {{ iface_name }} | Backing-up current config"
   ansible.builtin.copy:
     src: "{{ file }}"
     remote_src: true
@@ -14,12 +14,12 @@
     mode: 0644
   when: NW.validation.enable
 
-- name: "Network | Debian  | Interface | Purge | {{ iface_name }} | Removing interface file"
+- name: "Network  | Interface | Purge | {{ iface_name }} | Removing interface file"
   ansible.builtin.file:
     path: "{{ file }}"
     state: absent
 
-- name: "Network | Debian  | Interface | Purge | {{ iface_name }} | Removing interface from running-config"
+- name: "Network  | Interface | Purge | {{ iface_name }} | Removing interface from running-config"
   # is necessary for vlan interfaces and so on
   ansible.builtin.command: "{{ item }}"
   loop:
