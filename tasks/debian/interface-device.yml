@@ -1,6 +1,6 @@
 ---
 
-- name: "Network | Debian  | Interface | {{ name }} | Checking if main interface file exists"
+- name: "Network  | Interface | {{ name }} | Checking if main interface file exists"
   ansible.builtin.stat:
     path: "{{ file }}"
   register: iface_file_1
@@ -8,7 +8,7 @@
   check_mode: false
   when: NW.validation.enable
 
-- name: "Network | Debian  | Interface | {{ name }} | Checking if main interface file changed"
+- name: "Network  | Interface | {{ name }} | Checking if main interface file changed"
   ansible.builtin.template:
     src: 'templates/etc/network/interfaces.d/int.j2'
     dest: "{{ file }}"
@@ -19,7 +19,7 @@
   register: iface_file_2
   when: NW.validation.enable
 
-- name: "Network | Debian  | Interface | {{ name }} | Backing-up current config if changed/exists"
+- name: "Network  | Interface | {{ name }} | Backing-up current config if changed/exists"
   ansible.builtin.copy:
     src: "{{ file }}"
     remote_src: true
@@ -32,7 +32,7 @@
     - iface_file_1.stat.exists
     - iface_file_2.changed
 
-- name: "Network | Debian  | Interface | {{ name }} | Backing-up empty file"
+- name: "Network  | Interface | {{ name }} | Backing-up empty file"
   ansible.builtin.file:
     path: "{{ NW_HC.network_script_dir }}/backup/{{ file | replace('/', NW_HC.validation.backup_path_separator) }}"
     state: touch
@@ -44,7 +44,7 @@
     - not iface_file_1.stat.exists
     - iface_file_2.changed
 
-- name: "Network | Debian  | Interface | {{ name }} | Copying main interface file"
+- name: "Network  | Interface | {{ name }} | Copying main interface file"
   ansible.builtin.template:
     src: 'templates/etc/network/interfaces.d/int.j2'
     dest: "{{ file }}"

@@ -2,7 +2,7 @@
 
 # todo: check if two interfaces have a gateway defined => one of those will not come up since it's a configuration error..
 
-- name: Network | Debian | Interfaces | Creating interface directory
+- name: Network | Interfaces | Creating interface directory
   ansible.builtin.file:
     path: '/etc/network/interfaces.d'
     owner: 'root'
@@ -17,7 +17,7 @@
   check_mode: false
   changed_when: false
 
-- name: Network | Debian | Interfaces | Purging orphaned interfaces
+- name: Network | Interfaces | Purging orphaned interfaces
   ansible.builtin.include_tasks: purge.yml
   loop_control:
     loop_var: iface_name
@@ -27,7 +27,7 @@
     - NW.purge_orphaned_interfaces
     - iface_name not in NW.interfaces
 
-- name: Network | Debian | Interfaces | Configuring network interfaces
+- name: Network | Interfaces | Configuring network interfaces
   ansible.builtin.include_tasks: interface-device.yml
   when: >
     (iface.address is defined and iface.address | ansible.utils.ipaddr) or
@@ -43,7 +43,7 @@
   with_dict: "{{ NW.interfaces }}"
   no_log: true
 
-- name: Network | Debian  | Interfaces | Checking if main interface file changed
+- name: Network  | Interfaces | Checking if main interface file changed
   ansible.builtin.template:
     src: 'templates/etc/network/interfaces.j2'
     dest: '/etc/network/interfaces'
@@ -54,7 +54,7 @@
   register: copy_main_iface
   when: NW.validation.enable
 
-- name: Network | Debian | Interfaces | Backing-up current config if changed/exists
+- name: Network | Interfaces | Backing-up current config if changed/exists
   ansible.builtin.copy:
     src: '/etc/network/interfaces'
     remote_src: true
@@ -66,7 +66,7 @@
     - NW.validation.enable
     - copy_main_iface.changed
 
-- name: Network | Debian  | Interfaces | Copying main interface file
+- name: Network  | Interfaces | Copying main interface file
   ansible.builtin.template:
     src: 'templates/etc/network/interfaces.j2'
     dest: '/etc/network/interfaces'

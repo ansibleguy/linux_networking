@@ -1,6 +1,6 @@
 ---
 
-- name: Network | Debian | Startup | Creating directories
+- name: Network | Startup | Creating directories
   ansible.builtin.file:
     path: "{{ item }}"
     owner: 'root'
@@ -11,14 +11,14 @@
     - "{{ NW_HC.network_script_dir }}"
     - '/etc/systemd/system/networking.service.d'
 
-- name: Network | Debian | Startup | Checking if script exists
+- name: Network | Startup | Checking if script exists
   ansible.builtin.stat:
     path: "{{ NW_HC.network_script_dir }}/{{ startup_script }}"
   register: copy_startup_script_file
   changed_when: false
   check_mode: false
 
-- name: Network | Debian | Startup | Checking if script changed
+- name: Network | Startup | Checking if script changed
   ansible.builtin.template:
     src: "templates/usr/local/sbin/ansibleguy.linux_networking/startup.sh.j2"
     dest: "{{ NW_HC.network_script_dir }}/{{ startup_script }}"
@@ -28,7 +28,7 @@
   check_mode: true
   register: copy_startup_script
 
-- name: Network | Debian | Startup | Backing-up current config if changed/exists
+- name: Network | Startup | Backing-up current config if changed/exists
   ansible.builtin.copy:
     src: "{{ NW_HC.network_script_dir }}/{{ startup_script }}"
     remote_src: true
@@ -42,7 +42,7 @@
     - copy_startup_script_file.stat.exists
     - copy_startup_script.changed
 
-- name: Network | Debian | Startup | Copying script
+- name: Network | Startup | Copying script
   ansible.builtin.template:
     src: "templates/usr/local/sbin/ansibleguy.linux_networking/startup.sh.j2"
     dest: "{{ NW_HC.network_script_dir }}/{{ startup_script }}"
@@ -53,7 +53,7 @@
     not NW.validation.enable or
     copy_startup_script.changed
 
-- name: Network | Debian | Startup | Copying service files
+- name: Network | Startup | Copying service files
   ansible.builtin.template:
     src: "templates/etc/systemd/system/{{ item.src }}"
     dest: "/etc/systemd/system/{{ item.dst }}"
@@ -64,6 +64,6 @@
     - {src: 'ansibleguy.linux_networking.startup.service.j2', dst: "{{ NW.startup_service.name }}"}
     - {src: 'networking.service.d/override.conf.j2', dst: 'networking.service.d/override.conf'}
 
-- name: Network | Debian | Startup | Systemd daemon-reload
+- name: Network | Startup | Systemd daemon-reload
   ansible.builtin.systemd:
     daemon_reload: yes
