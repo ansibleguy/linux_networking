@@ -21,8 +21,8 @@ ansible-galaxy install ansibleguy.linux_networking
 ansible-galaxy install ansibleguy.linux_networking --roles-path ./roles
 
 # install dependencies
-pip install netaddr
 ansible-galaxy install -r requirements.yml
+python3 -m pip install -r requirements.txt
 ```
 
 ## Functionality
