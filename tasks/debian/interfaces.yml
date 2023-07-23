@@ -52,7 +52,7 @@
     mode: 0644
   check_mode: true
   register: copy_main_iface
-  when: NW.validation.enable
+  when: NW.validation.enable | bool
 
 - name: Network | Interfaces | Backing-up current config if changed/exists
   ansible.builtin.copy:
@@ -63,7 +63,7 @@
     group: 'root'
     mode: 0644
   when:
-    - NW.validation.enable
+    - NW.validation.enable | bool
     - copy_main_iface.changed
 
 - name: Network  | Interfaces | Copying main interface file
@@ -74,5 +74,5 @@
     group: 'root'
     mode: 0644
   when: >
-    not NW.validation.enable or
+    not NW.validation.enable | bool or
     copy_main_iface.changed

@@ -12,7 +12,7 @@
     owner: 'root'
     group: 'root'
     mode: 0644
-  when: NW.validation.enable
+  when: NW.validation.enable | bool
 
 - name: "Network  | Interface | Purge | {{ iface_name }} | Removing interface file"
   ansible.builtin.file:

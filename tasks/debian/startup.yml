@@ -38,7 +38,7 @@
     group: 'root'
     mode: 0755
   when:
-    - NW.validation.enable
+    - NW.validation.enable | bool
     - copy_startup_script_file.stat.exists
     - copy_startup_script.changed
 
@@ -50,7 +50,7 @@
     group: 'root'
     mode: 0755
   when: >
-    not NW.validation.enable or
+    not NW.validation.enable | bool or
     copy_startup_script.changed
 
 - name: Network | Startup | Copying service files

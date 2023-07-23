@@ -6,7 +6,7 @@
   register: iface_file_1
   changed_when: false
   check_mode: false
-  when: NW.validation.enable
+  when: NW.validation.enable | bool
 
 - name: "Network  | Interface | {{ name }} | Checking if main interface file changed"
   ansible.builtin.template:
@@ -17,7 +17,7 @@
     mode: 0644
   check_mode: true
   register: iface_file_2
-  when: NW.validation.enable
+  when: NW.validation.enable | bool
 
 - name: "Network  | Interface | {{ name }} | Backing-up current config if changed/exists"
   ansible.builtin.copy:
@@ -28,7 +28,7 @@
     group: 'root'
     mode: 0644
   when:
-    - NW.validation.enable
+    - NW.validation.enable | bool
     - iface_file_1.stat.exists
     - iface_file_2.changed
 
@@ -40,7 +40,7 @@
     group: 'root'
     mode: 0644
   when:
-    - NW.validation.enable
+    - NW.validation.enable | bool
     - not iface_file_1.stat.exists
     - iface_file_2.changed
 
@@ -52,5 +52,5 @@
     group: 'root'
     mode: 0644
   when: >
-    not NW.validation.enable or
+    not NW.validation.enable | bool or
     iface_file_2.changed

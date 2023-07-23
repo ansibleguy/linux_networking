@@ -27,7 +27,7 @@
   ansible.builtin.file:
     path: "{{ NW_HC.network_script_dir }}/backup"
     state: absent
-  when: NW.validation.enable
+  when: NW.validation.enable | bool
   tags: [routing, interfaces, base]
   changed_when: false
 
@@ -38,7 +38,7 @@
     group: 'root'
     state: directory
     mode: 0755
-  when: NW.validation.enable
+  when: NW.validation.enable | bool
   tags: [routing, interfaces, base]
   changed_when: false
 
@@ -116,7 +116,7 @@
     sysctl_set: yes
     state: present
     reload: yes
-  with_dict: "{{ NW_HC.sysctl.forwarding.enable }}"
+  with_dict: "{{ NW_HC.sysctl.forwarding.enable | bool }}"
   when: NW.support.traffic_forwarding
   tags: routing
 
@@ -138,7 +138,7 @@
     sysctl_set: yes
     state: present
     reload: yes
-  with_dict: "{{ NW_HC.sysctl.ipv6.enable }}"
+  with_dict: "{{ NW_HC.sysctl.ipv6.enable | bool }}"
   when: NW.support.ipv6
   tags: [routing, interfaces]
 

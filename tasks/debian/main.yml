@@ -4,7 +4,7 @@
 
 - name: Network | Configuring startup-service
   ansible.builtin.import_tasks: startup.yml
-  when: NW.startup_service.enable
+  when: NW.startup_service.enable | bool
   tags: [routing, interfaces]
 
 - name: Network | Configuring network interfaces
@@ -16,10 +16,10 @@
 
 - name: Network | Applying network config via validator
   ansible.builtin.import_tasks: validation.yml
-  when: NW.validation.enable
+  when: NW.validation.enable | bool
   tags: [routing, interfaces, base]
 
 - name: Network | Applying network config w/o validation
   ansible.builtin.import_tasks: apply.yml
-  when: not NW.validation.enable
+  when: not NW.validation.enable | bool
   tags: [routing, interfaces, base]
