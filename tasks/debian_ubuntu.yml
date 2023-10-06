@@ -116,7 +116,7 @@
     sysctl_set: yes
     state: present
     reload: yes
-  with_dict: "{{ NW_HC.sysctl.forwarding.enable | bool }}"
+  with_dict: "{{ NW_HC.sysctl.forwarding.enable }}"
   when: NW.support.traffic_forwarding
   tags: routing
 
@@ -138,7 +138,7 @@
     sysctl_set: yes
     state: present
     reload: yes
-  with_dict: "{{ NW_HC.sysctl.ipv6.enable | bool }}"
+  with_dict: "{{ NW_HC.sysctl.ipv6.enable }}"
   when: NW.support.ipv6
   tags: [routing, interfaces]
 

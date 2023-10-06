@@ -1,5 +1,5 @@
     # vlan settings
-    #  get the current bond-status via: 'cat /proc/net/vlan/{{ name }}'
+    #  get the current vlan-status via: 'cat /proc/net/vlan/{{ name }}'
 {% if name.find('.') == -1 %}
     vlan-raw-device {{ iface.vlan-raw-device }}  # if the int is a vlan but is not written in the INT.VID syntax - we'll need to define the parent-interface
 {% endif %}
