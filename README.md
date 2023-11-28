@@ -14,6 +14,10 @@ Ansible Role to deploy network configuration/interfaces on linux servers.
 ## Install
 
 ```bash
+# latest
+ansible-galaxy role install git+https://github.com/ansibleguy/linux_networking
+
+# from galaxy
 ansible-galaxy install ansibleguy.linux_networking
 
 # or to custom role-path
