@@ -76,6 +76,8 @@ python3 -m pip install -r requirements.txt
 
 ## Usage
 
+You want a simple Ansible GUI? Check-out my [Ansible WebUI](https://github.com/ansibleguy/webui)
+
 ### Config
 
 Define the network config as needed:
