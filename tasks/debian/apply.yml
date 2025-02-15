@@ -5,6 +5,7 @@
   ignore_errors: true
   async: "{{ NW.reload_timeout }}"
   poll: 2
+  changed_when: false
 
 - name: Network | Apply | Updating ip used in this execution
   ansible.builtin.set_fact:

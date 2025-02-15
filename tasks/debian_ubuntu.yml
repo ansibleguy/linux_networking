@@ -168,6 +168,7 @@
     (prerequisite_bonding_mod is defined and prerequisite_bonding_mod.changed) or
     (prerequisite_bonding_pkg is defined and prerequisite_bonding_pkg.changed) or
     (prerequisite_bridge_pkg is defined and prerequisite_bridge_pkg.changed)
+  changed_when: false
 
 - name: Network | Waiting to re-establish connection
   ansible.builtin.wait_for_connection:
