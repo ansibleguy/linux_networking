@@ -20,7 +20,7 @@
 
 - name: Network | Startup | Checking if script changed
   ansible.builtin.template:
-    src: "templates/usr/local/sbin/ansibleguy.linux_networking/startup.sh.j2"
+    src: "templates/usr/local/sbin/oxlorg.linux_networking/startup.sh.j2"
     dest: "{{ NW_HC.network_script_dir }}/{{ startup_script }}"
     owner: 'root'
     group: 'root'
@@ -44,7 +44,7 @@
 
 - name: Network | Startup | Copying script
   ansible.builtin.template:
-    src: "templates/usr/local/sbin/ansibleguy.linux_networking/startup.sh.j2"
+    src: "templates/usr/local/sbin/network/startup.sh.j2"
     dest: "{{ NW_HC.network_script_dir }}/{{ startup_script }}"
     owner: 'root'
     group: 'root'
@@ -61,8 +61,24 @@
     group: 'root'
     mode: 0644
   loop:
-    - {src: 'ansibleguy.linux_networking.startup.service.j2', dst: "{{ NW.startup_service.name }}"}
+    - {src: 'network-startup.service.j2', dst: "{{ NW.startup_service.name }}"}
     - {src: 'networking.service.d/override.conf.j2', dst: 'networking.service.d/override.conf'}
+
+- name: Network | Startup | Remove legacy service (1/2)
+  ansible.builtin.systemd:
+    name: "{{ NW_HC.startup.service_old }}"
+    state: stopped
+    enabled: false
+  register: legacy_svc_removal
+  failed_when:
+    - legacy_svc_removal.failed
+    - "'does not exist' not in legacy_svc_removal.msg"
+    - "'Could not find' not in legacy_svc_removal.msg"
+
+- name: Network | Startup | Remove legacy service (2/2)
+  ansible.builtin.file:
+    path: "/etc/systemd/system/{{ NW_HC.startup.service_old }}"
+    state: absent
 
 - name: Network | Startup | Systemd daemon-reload
   ansible.builtin.systemd:

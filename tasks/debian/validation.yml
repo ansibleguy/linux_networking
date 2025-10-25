@@ -7,15 +7,31 @@
 
 - name: Network | Validator | Copying validation script
   ansible.builtin.template:
-    src: 'templates/usr/local/sbin/ansibleguy.linux_networking/activate_network.py.j2'
+    src: 'templates/usr/local/sbin/network/activate_network.py.j2'
     dest: "{{ NW_HC.network_script_dir }}/{{ NW_HC.validation.script }}"
     owner: 'root'
     group: 'root'
     mode: 0755
 
+- name: Network | Validator | Remove legacy service (1/2)
+  ansible.builtin.systemd:
+    name: "{{ NW_HC.validation.service_old }}"
+    state: stopped
+    enabled: false
+  register: legacy_svc_removal
+  failed_when:
+    - legacy_svc_removal.failed
+    - "'does not exist' not in legacy_svc_removal.msg"
+    - "'Could not find' not in legacy_svc_removal.msg"
+
+- name: Network | Validator | Remove legacy service (2/2)
+  ansible.builtin.file:
+    path: "/etc/systemd/system/{{ NW_HC.validation.service_old }}"
+    state: absent
+
 - name: Network | Validator | Copying validation service
   ansible.builtin.template:
-    src: 'templates/etc/systemd/system/ansibleguy.linux_networking.activate_network.service.j2'
+    src: 'templates/etc/systemd/system/network-activation.service.j2'
     dest: "/etc/systemd/system/{{ NW_HC.validation.service }}"
     owner: 'root'
     group: 'root'

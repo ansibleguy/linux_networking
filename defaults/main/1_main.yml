@@ -37,7 +37,7 @@ defaults_ne:
     test_timeout: 1  # timeout per test in seconds
     apply_timeout: 30
     logging: true
-    syslog_id: 'ansibleguy.linux_networking.activate_network'
+    syslog_id: 'network-activation'
     tests:
       # could be a list of some internal addresses that MUST BE reachable
       # you might need to modify the default rule if icmp-ping is blocked in the network
@@ -53,8 +53,8 @@ defaults_ne:
     # the startup-service will enable the configuration of custom interfaces and routing
     # it hooks into the default 'networking.service' so it gets applied every time the network gets reloaded
     script: 'startup.sh'
-    name: 'ansibleguy.linux_networking.startup.service'
-    syslog_id: 'ansibleguy.linux_networking.startup'
+    name: 'network-startup.service'
+    syslog_id: 'network-startup'
 
     interfaces: {}  # a dictionary of interfaces to be created by this role
     # example:

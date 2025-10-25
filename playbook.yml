@@ -8,4 +8,4 @@
   #  vars:
   #    the network config needs to be set in the inventory hosts
   roles:
-    - ansibleguy.linux_networking
+    - oxlorg.linux_networking

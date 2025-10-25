@@ -2,16 +2,16 @@
 
 Ansible Role to deploy network configuration/interfaces on linux servers. 
 
-[![Lint](https://github.com/ansibleguy/linux_networking/actions/workflows/lint.yml/badge.svg)](https://github.com/ansibleguy/linux_networking/actions/workflows/lint.yml)
-[![Ansible Galaxy](https://badges.ansibleguy.net/galaxy.badge.svg)](https://galaxy.ansible.com/ui/standalone/roles/ansibleguy/linux_networking)
+[![Lint](https://github.com/O-X-L/ansible-role-linux-networking/actions/workflows/lint.yml/badge.svg)](https://github.com/O-X-L/ansible-role-linux-networking/actions/workflows/lint.yml)
+[![Ansible Galaxy](https://badges.oss.oxl.app/galaxy.badge.svg)](https://galaxy.ansible.com/ui/standalone/roles/oxlorg/linux_networking)
 
 **Molecule Integration-Tests**:
 
-* Status: [![Molecule Test Status](https://badges.ansibleguy.net/linux_networking.molecule.svg)](https://github.com/ansibleguy/_meta_cicd/blob/latest/templates/usr/local/bin/cicd/molecule.sh.j2) |
-[![Functional-Tests](https://github.com/ansibleguy/linux_networking/actions/workflows/integration_test_result.yml/badge.svg)](https://github.com/ansibleguy/linux_networking/actions/workflows/integration_test_result.yml)
-* Logs: [API](https://ci.ansibleguy.net/api/job/ansible-test-molecule-linux_networking/logs?token=2b7bba30-9a37-4b57-be8a-99e23016ce70&lines=1000) | [Short](https://badges.ansibleguy.net/log/molecule_linux_networking_test_short.log) | [Full](https://badges.ansibleguy.net/log/molecule_linux_networking_test.log)
+* Status: [![Molecule Test Status](https://badges.oss.oxl.app/linux_networking.molecule.svg)](https://github.com/O-X-L/ansible-role-oxl-cicd/blob/latest/templates/usr/local/bin/cicd/molecule.sh.j2) |
+[![Functional-Tests](https://github.com/O-X-L/ansible-role-linux-networking/actions/workflows/integration_test_result.yml/badge.svg)](https://github.com/O-X-L/ansible-role-linux-networking/actions/workflows/integration_test_result.yml)
+* Logs: [API](https://ci.oss.oxl.app/api/job/ansible-test-molecule-linux_networking/logs?token=2b7bba30-9a37-4b57-be8a-99e23016ce70&lines=1000) | [Short](https://badges.oss.oxl.app/log/molecule_linux_networking_test_short.log) | [Full](https://badges.oss.oxl.app/log/molecule_linux_networking_test.log)
 
-Internal CI: [Tester Role](https://github.com/ansibleguy/_meta_cicd) | [Jobs API](https://github.com/O-X-L/github-self-hosted-jobs-systemd)
+Internal CI: [Tester Role](https://github.com/O-X-L/ansible-role-oxl-cicd) | [Jobs API](https://github.com/O-X-L/github-self-hosted-jobs-systemd)
 
 **Tested:**
 * Debian 11
@@ -23,13 +23,13 @@ Internal CI: [Tester Role](https://github.com/ansibleguy/_meta_cicd) | [Jobs API
 
 ```bash
 # latest
-ansible-galaxy role install git+https://github.com/ansibleguy/linux_networking
+ansible-galaxy role install git+https://github.com/O-X-L/ansible-role-linux-networking
 
 # from galaxy
-ansible-galaxy install ansibleguy.linux_networking
+ansible-galaxy install oxlorg.linux_networking
 
 # or to custom role-path
-ansible-galaxy install ansibleguy.linux_networking --roles-path ./roles
+ansible-galaxy install oxlorg.linux_networking --roles-path ./roles
 
 # install dependencies
 ansible-galaxy install -r requirements.yml
@@ -52,7 +52,7 @@ python3 -m pip install -r requirements.txt
 
 * You want a simple **Ansible GUI**?
 
-  Check-out this [Ansible WebUI](https://github.com/ansibleguy/webui)
+  Check-out this [Ansible WebUI](https://github.com/O-X-L/ansible-webui)
 
 ----
 
@@ -192,7 +192,7 @@ There are also some useful **tags** available:
 
 * **Note:** Most of the role's functionality can be opted in or out.
 
-  For all available options - see the default-config located in [the main defaults-file](https://github.com/ansibleguy/linux_networking/blob/latest/defaults/main/1_main.yml)!
+  For all available options - see the default-config located in [the main defaults-file](https://github.com/O-X-L/ansible-role-linux-networking/blob/latest/defaults/main/1_main.yml)!
 
 
 * **Warning:** Not every setting/variable you provide will be checked for validity. Bad config might break the role!
@@ -319,7 +319,7 @@ guy@ansible:~# ip a
 
 guy@ansible:~# cat /etc/network/interfaces.d/eth0
 > # Ansible managed
-> # ansibleguy.linux_networking
+> # oxlorg.linux_networking
 > 
 > # for more config-details see: https://wiki.debian.org/NetworkConfiguration
 > 
